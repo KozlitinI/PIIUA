@@ -469,7 +469,17 @@
                         <span>🔒 3. Псевдонімізований Текст (для LLM)</span>
                     </div>
                 </div>
-                <textarea id="pseudonymizedBox" placeholder="Псевдонімізований текст з унікальними токенами (редагований)..." style="height: 180px; margin-bottom: 1rem;"></textarea>
+                
+                <!-- Batch Token Replacement Toolbar -->
+                <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; background: rgba(0, 0, 0, 0.25); padding: 0.5rem 0.75rem; border-radius: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; white-space: nowrap;">Заміна токена:</span>
+                    <input type="text" id="findTokenInput" placeholder="Шукати (<PERSON_4>)" class="token-input" style="font-size: 0.8rem; padding: 0.25rem 0.5rem; flex: 1;">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">➔</span>
+                    <input type="text" id="replaceTokenInput" placeholder="Замінити на (<PERSON_2>)" class="token-input" style="font-size: 0.8rem; padding: 0.25rem 0.5rem; flex: 1;">
+                    <button class="btn btn-secondary btn-sample" onclick="batchReplaceToken()" style="font-size: 0.8rem; padding: 0.3rem 0.7rem; white-space: nowrap;">Замінити</button>
+                </div>
+
+                <textarea id="pseudonymizedBox" placeholder="Псевдонімізований текст з унікальними токенами (редагований)..." style="height: 160px; margin-bottom: 1rem;"></textarea>
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                     <h4 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Словник Оборотної Мапи (Редагований)</h4>
@@ -733,6 +743,71 @@
             }
 
             currentMapping = newMapping;
+        }
+
+        function batchReplaceToken() {
+            const findVal = document.getElementById('findTokenInput').value.trim();
+            const replaceVal = document.getElementById('replaceTokenInput').value.trim();
+
+            if (!findVal || !replaceVal) {
+                alert('Будь ласка, вкажіть обидва токени: який токен шукати (напр. <PERSON_4>) та на який замінювати (напр. <PERSON_2>).');
+                return;
+            }
+
+            const pseudoBox = document.getElementById('pseudonymizedBox');
+            const llmBox = document.getElementById('llmBox');
+
+            if (!pseudoBox || !pseudoBox.value) {
+                alert('Немає псевдонімізованого тексту для заміни.');
+                return;
+            }
+
+            if (!pseudoBox.value.includes(findVal)) {
+                alert(`Токен "${findVal}" не знайдено у псевдонімізованому тексті.`);
+                return;
+            }
+
+            // Replace in pseudonymized text box
+            pseudoBox.value = pseudoBox.value.split(findVal).join(replaceVal);
+
+            // Replace in LLM box if present
+            if (llmBox && llmBox.value) {
+                llmBox.value = llmBox.value.split(findVal).join(replaceVal);
+            }
+
+            // Update Mapping Table
+            const tbody = document.getElementById('mappingTableBody');
+            const rows = tbody.querySelectorAll('tr');
+
+            let foundTargetRow = null;
+            let foundDestRow = null;
+
+            rows.forEach(row => {
+                const tokenInput = row.querySelector('.token-input');
+                if (tokenInput) {
+                    const val = tokenInput.value.trim();
+                    if (val === findVal) foundTargetRow = row;
+                    if (val === replaceVal) foundDestRow = row;
+                }
+            });
+
+            if (foundTargetRow) {
+                if (foundDestRow) {
+                    // Destination token already exists in table, remove target row
+                    foundTargetRow.remove();
+                } else {
+                    // Rename target token row to replaceVal
+                    const tokenInput = foundTargetRow.querySelector('.token-input');
+                    tokenInput.value = replaceVal;
+                    tokenInput.setAttribute('data-old-val', replaceVal);
+                }
+            }
+
+            updateMappingFromTable();
+
+            // Clear inputs
+            document.getElementById('findTokenInput').value = '';
+            document.getElementById('replaceTokenInput').value = '';
         }
 
         async function runRestoration() {
