@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIIUA — Псевдонімізація та Відновлення Даних у Медіації</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-purple: #c084fc;
+            --accent-emerald: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-rose: #f43f5e;
+            --gradient-primary: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            --gradient-badge: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            color: var(--accent-blue);
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.02em;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 750px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .pipeline-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            border-radius: 1rem;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .pipeline-step {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .pipeline-step.active {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .pipeline-step.active .step-number {
+            background: var(--gradient-badge);
+            color: #fff;
+        }
+
+        .pipeline-arrow {
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 1.2rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 220px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .btn {
+            background: var(--gradient-badge);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-sample {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+        }
+
+        .pii-highlighted-box {
+            width: 100%;
+            min-height: 220px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-y: auto;
+        }
+
+        .pii-tag {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            border-radius: 0.375rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0 0.1rem;
+        }
+
+        .tag-person { background: rgba(56, 189, 248, 0.25); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4); }
+        .tag-rntrc { background: rgba(251, 191, 36, 0.25); color: #fde047; border: 1px solid rgba(251, 191, 36, 0.4); }
+        .tag-passport { background: rgba(192, 132, 252, 0.25); color: #e9d5ff; border: 1px solid rgba(192, 132, 252, 0.4); }
+        .tag-iban { background: rgba(52, 211, 153, 0.25); color: #6ee7b7; border: 1px solid rgba(52, 211, 153, 0.4); }
+        .tag-phone { background: rgba(244, 63, 94, 0.25); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.4); }
+        .tag-case_num { background: rgba(129, 140, 248, 0.25); color: #c7d2fe; border: 1px solid rgba(129, 140, 248, 0.4); }
+        .tag-address { background: rgba(251, 146, 60, 0.25); color: #fdba74; border: 1px solid rgba(251, 146, 60, 0.4); }
+        .tag-email { background: rgba(168, 85, 247, 0.25); color: #f0abfc; border: 1px solid rgba(168, 85, 247, 0.4); }
+        .tag-vehicle { background: rgba(14, 165, 233, 0.25); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.4); }
+
+        .token-mapping-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .token-mapping-table th, .token-mapping-table td {
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .token-mapping-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .token-code {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        .token-input {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 0.375rem;
+            padding: 0.3rem 0.5rem;
+            color: var(--accent-blue);
+            font-weight: 600;
+            width: 100%;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .token-input:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 8px rgba(192, 132, 252, 0.3);
+        }
+
+        .value-input {
+            font-family: inherit;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 0.375rem;
+            padding: 0.3rem 0.5rem;
+            color: var(--text-main);
+            width: 100%;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .value-input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.2);
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: none;
+            color: var(--accent-rose);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0.25rem 0.4rem;
+            border-radius: 0.25rem;
+            transition: background 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: rgba(244, 63, 94, 0.25);
+        }
+
+        .badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .entity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .score-pill {
+            background: rgba(52, 211, 153, 0.2);
+            color: var(--accent-emerald);
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 3rem;
+            border-top: 1px solid var(--card-border);
+            padding-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-badge">
+                🛡️ Open-Source Presidio Engine • Mediation & ODR
+            </div>
+            <h1>PII Псевдонімізація та Відновлення Токенів</h1>
+            <p>Безпечний аналіз спору: виявлення персональних даних українських юридичних текстів, оборотна псевдонімізація для передачі в LLM та локальна відновлювальна де-псевдонімізація.</p>
+        </header>
+
+        <!-- Pipeline Indicator -->
+        <div class="pipeline-bar">
+            <div class="pipeline-step active">
+                <div class="step-number">1</div>
+                <span>Вхідний документ (ОДР)</span>
+            </div>
+            <div class="pipeline-arrow">➔</div>
+            <div class="pipeline-step active">
+                <div class="step-number">2</div>
+                <span>Presidio Analyzer (NER)</span>
+            </div>
+            <div class="pipeline-arrow">➔</div>
+            <div class="pipeline-step active">
+                <div class="step-number">3</div>
+                <span>Псевдонімізація (<TOKEN>)</span>
+            </div>
+            <div class="pipeline-arrow">➔</div>
+            <div class="pipeline-step active">
+                <div class="step-number">4</div>
+                <span>LLM / Аналітичний модуль</span>
+            </div>
+            <div class="pipeline-arrow">➔</div>
+            <div class="pipeline-step active">
+                <div class="step-number">5</div>
+                <span>Локальне відновлення</span>
+            </div>
+        </div>
+
+        <!-- Main Step 1 & Step 2 Layout -->
+        <div class="grid-2">
+            <!-- Left Card: Input Text -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>📄 1. Позиція сторони / Документ</span>
+                    </div>
+                </div>
+                <textarea id="inputText" placeholder="Введіть або вставте текст позиції сторони, позовної заяви чи медіаційного листування..."></textarea>
+                <div style="margin-top: 1rem; display: flex; gap: 0.75rem;">
+                    <button class="btn" onclick="runPseudonymization()" style="flex: 1;">
+                        ⚡ Запустити Presidio PII-Псевдонімізацію
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Card: Detected Entities -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>🔍 2. Виявлені Персональні Дані (PII)</span>
+                    </div>
+                    <span id="entityCountBadge" class="score-pill" style="display:none;">0 PII</span>
+                </div>
+                <div id="entitiesBadges" class="badge-list">
+                    <span style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;">Натисніть "Запустити PII-Псевдонімізацію" для аналізу...</span>
+                </div>
+                <div id="highlightedBox" class="pii-highlighted-box" style="margin-top: 0.5rem; flex: 1;">
+                    <span style="color: var(--text-muted); font-style: italic;">Тут відобразиться підсвічений текст з PII сутностями...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3 & Step 4 Grid -->
+        <div class="grid-2">
+            <!-- Pseudonymized Text + Token Map -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>🔒 3. Псевдонімізований Текст (для LLM)</span>
+                    </div>
+                </div>
+                <textarea id="pseudonymizedBox" placeholder="Псевдонімізований текст з унікальними токенами (редагований)..." style="height: 180px; margin-bottom: 1rem;"></textarea>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <h4 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Словник Оборотної Мапи (Редагований)</h4>
+                    <button class="btn btn-secondary btn-sample" onclick="addMappingRow('', '')" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">+ Додати токен</button>
+                </div>
+                <div style="max-height: 170px; overflow-y: auto;">
+                    <table class="token-mapping-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 35%;">Токен (Редагований)</th>
+                                <th style="width: 55%;">Оригінальні PII дані</th>
+                                <th style="width: 10%; text-align: center;">Дія</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mappingTableBody">
+                            <tr><td colspan="3" style="color: var(--text-muted); font-style: italic;">Словник порожній</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- LLM Output & Restoration -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>🤖 4. Локальне Відновлення Токенів (Де-псевдонімізація)</span>
+                    </div>
+                </div>
+                <textarea id="llmBox" placeholder="Вставте оброблений LLM текст (з токенами <PERSON_1> і т.д.) для відновлення персональних даних..."></textarea>
+                <div style="margin-top: 1rem; margin-bottom: 1rem;">
+                    <button class="btn" onclick="runRestoration()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        🔄 Локально Відновити Персональні Дані
+                    </button>
+                </div>
+                <div id="restoredBox" class="pii-highlighted-box" style="height: 150px;">
+                    <span style="color: var(--text-muted); font-style: italic;">Тут з'явиться підсумковий документ з відновленими реальними PII даними...</span>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            Система PII-Псевдонімізації та Деідентифікації для Медіації та ODR • Побудовано на Presidio & FastAPI • Україна 2026
+        </footer>
+    </div>
+
+    <script>
+        let currentMapping = {};
+
+        async function runPseudonymization() {
+            const text = document.getElementById('inputText').value;
+            if (!text.trim()) {
+                alert('Будь ласка, введіть текст для аналізу.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/v1/pseudonymize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text, score_threshold: 0.4 })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Помилка сервера: ' + response.statusText);
+                }
+
+                const data = await response.json();
+                currentMapping = data.mapping;
+
+                // 1. Render Badges & Count
+                renderBadges(data.entities);
+
+                // 2. Render Highlighted Box
+                renderHighlightedText(text, data.entities);
+
+                // 3. Render Pseudonymized Output
+                document.getElementById('pseudonymizedBox').value = data.pseudonymized_text;
+
+                // 4. Render Token Mapping Table
+                renderMappingTable(data.mapping);
+
+            } catch (err) {
+                alert('Помилка під час аналізу: ' + err.message);
+            }
+        }
+
+        function renderBadges(entities) {
+            const container = document.getElementById('entitiesBadges');
+            const countBadge = document.getElementById('entityCountBadge');
+            container.innerHTML = '';
+
+            countBadge.style.display = 'inline-block';
+            countBadge.textContent = `${entities.length} PII Сутностей`;
+
+            if (entities.length === 0) {
+                container.innerHTML = '<span style="color: var(--text-muted);">Персональних даних не виявлено.</span>';
+                return;
+            }
+
+            entities.forEach(ent => {
+                const badge = document.createElement('div');
+                badge.className = 'entity-badge';
+                badge.innerHTML = `
+                    <span style="font-weight:600;">${ent.entity_type}</span>: 
+                    <span style="color:var(--text-main);">${escapeHtml(ent.text)}</span> 
+                    <span class="score-pill">${Math.round(ent.score * 100)}%</span>
+                `;
+                container.appendChild(badge);
+            });
+        }
+
+        function renderHighlightedText(originalText, entities) {
+            const box = document.getElementById('highlightedBox');
+            if (!entities || entities.length === 0) {
+                box.textContent = originalText;
+                return;
+            }
+
+            // Sort entities backwards
+            const sorted = [...entities].sort((a, b) => b.start - a.start);
+            let html = originalText;
+
+            sorted.forEach(ent => {
+                const tagClass = 'tag-' + ent.entity_type.toLowerCase().replace('uk_', '');
+                const snippet = html.substring(ent.start, ent.end);
+                const replacement = `<span class="pii-tag ${tagClass}" title="${ent.entity_type} (${Math.round(ent.score*100)}%)">${escapeHtml(snippet)}</span>`;
+                html = html.substring(0, ent.start) + replacement + html.substring(ent.end);
+            });
+
+            box.innerHTML = html;
+        }
+
+        function renderMappingTable(mapping) {
+            const tbody = document.getElementById('mappingTableBody');
+            tbody.innerHTML = '';
+
+            const keys = Object.keys(mapping);
+            if (keys.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="color: var(--text-muted); font-style: italic;">Словник порожній</td></tr>';
+                return;
+            }
+
+            keys.forEach(token => {
+                addMappingRow(token, mapping[token], false);
+            });
+            updateMappingFromTable();
+        }
+
+        function addMappingRow(token = '', value = '', updateAfter = true) {
+            const tbody = document.getElementById('mappingTableBody');
+            
+            // Remove empty message if present
+            if (tbody.children.length === 1 && tbody.children[0].cells.length < 3) {
+                tbody.innerHTML = '';
+            }
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <input type="text" class="token-input" value="${escapeHtml(token)}" data-old-val="${escapeHtml(token)}" placeholder="<TOKEN_1>" oninput="updateMappingFromTable()" onchange="updateMappingFromTable()">
+                </td>
+                <td>
+                    <input type="text" class="value-input" value="${escapeHtml(value)}" placeholder="Оригінальні дані" oninput="updateMappingFromTable()" onchange="updateMappingFromTable()">
+                </td>
+                <td style="text-align: center;">
+                    <button class="btn-icon" onclick="deleteMappingRow(this)" title="Видалити">🗑️</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+
+            if (updateAfter) {
+                updateMappingFromTable();
+            }
+        }
+
+        function deleteMappingRow(btn) {
+            const tr = btn.closest('tr');
+            if (tr) {
+                const tokenInput = tr.querySelector('.token-input');
+                
+                if (tokenInput) {
+                    const tokenVal = tokenInput.getAttribute('data-old-val') || tokenInput.value.trim();
+
+                    if (tokenVal) {
+                        const pseudoBox = document.getElementById('pseudonymizedBox');
+                        const llmBox = document.getElementById('llmBox');
+
+                        if (pseudoBox && pseudoBox.value && !pseudoBox.value.includes('Псевдонімізований текст з унікальними')) {
+                            pseudoBox.value = pseudoBox.value.split(tokenVal).join('').replace(/  +/g, ' ');
+                        }
+
+                        if (llmBox && llmBox.value) {
+                            llmBox.value = llmBox.value.split(tokenVal).join('').replace(/  +/g, ' ');
+                        }
+                    }
+                }
+
+                tr.remove();
+            }
+
+            const tbody = document.getElementById('mappingTableBody');
+            if (tbody.children.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="color: var(--text-muted); font-style: italic;">Словник порожній</td></tr>';
+            }
+            updateMappingFromTable();
+        }
+
+        function updateMappingFromTable() {
+            const newMapping = {};
+            const tbody = document.getElementById('mappingTableBody');
+            const rows = tbody.querySelectorAll('tr');
+
+            const pseudoBox = document.getElementById('pseudonymizedBox');
+            const llmBox = document.getElementById('llmBox');
+
+            let pseudoText = pseudoBox ? pseudoBox.value : '';
+            let llmText = llmBox ? llmBox.value : '';
+            
+            rows.forEach(row => {
+                const tokenInput = row.querySelector('.token-input');
+                const valueInput = row.querySelector('.value-input');
+                if (tokenInput && valueInput) {
+                    const oldVal = tokenInput.getAttribute('data-old-val') || '';
+                    const newVal = tokenInput.value.trim();
+                    const vVal = valueInput.value.trim();
+
+                    if (oldVal && newVal && oldVal !== newVal) {
+                        // Replace token in pseudonymized text box
+                        if (pseudoText && !pseudoText.includes('Псевдонімізований текст з унікальними')) {
+                            pseudoText = pseudoText.split(oldVal).join(newVal);
+                        }
+                        // Replace token in LLM box if present
+                        if (llmText) {
+                            llmText = llmText.split(oldVal).join(newVal);
+                        }
+                        tokenInput.setAttribute('data-old-val', newVal);
+                    } else if (oldVal && !newVal) {
+                        // Token input was cleared/erased: remove token completely from text box
+                        if (pseudoText && !pseudoText.includes('Псевдонімізований текст з унікальними')) {
+                            pseudoText = pseudoText.split(oldVal).join('').replace(/  +/g, ' ');
+                        }
+                        if (llmText) {
+                            llmText = llmText.split(oldVal).join('').replace(/  +/g, ' ');
+                        }
+                        tokenInput.setAttribute('data-old-val', '');
+                    } else if (!oldVal && newVal) {
+                        tokenInput.setAttribute('data-old-val', newVal);
+                    }
+
+                    if (newVal) {
+                        newMapping[newVal] = vVal;
+                    }
+                }
+            });
+
+            if (pseudoBox && pseudoText !== pseudoBox.value) {
+                pseudoBox.value = pseudoText;
+            }
+            if (llmBox && llmText !== llmBox.value) {
+                llmBox.value = llmText;
+            }
+
+            currentMapping = newMapping;
+        }
+
+        async function runRestoration() {
+            const llmText = document.getElementById('llmBox').value;
+            if (!llmText.trim()) {
+                alert('Немає тексту від LLM для відновлення.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/v1/restore', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: llmText,
+                        mapping: currentMapping
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Помилка сервера: ' + response.statusText);
+                }
+
+                const data = await response.json();
+                document.getElementById('restoredBox').textContent = data.restored_text;
+
+            } catch (err) {
+                alert('Помилка під час відновлення: ' + err.message);
+            }
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
