@@ -17,6 +17,7 @@ from app.recognizers.uk_case_number import UkCaseNumberRecognizer
 from app.recognizers.uk_address import UkAddressRecognizer
 from app.recognizers.uk_vehicle import UkVehicleRecognizer
 from app.recognizers.uk_names import UkNameRecognizer
+from app.recognizers.uk_organization import UkOrganizationRecognizer
 
 logger = logging.getLogger("piiua.analyzer")
 
@@ -54,9 +55,10 @@ def create_uk_analyzer_engine() -> AnalyzerEngine:
         logger.info("Successfully loaded spacy model 'uk_core_news_sm' for NLP engine.")
     except Exception as e:
         logger.warning(f"Could not load spacy 'uk_core_news_sm' model ({e}). Fallback to pattern-based Ukrainian analysis.")
-        registry.add_recognizer(UkNameRecognizer())
 
     # Register custom Ukrainian recognizers
+    #registry.add_recognizer(UkNameRecognizer())
+    registry.add_recognizer(UkOrganizationRecognizer())
     registry.add_recognizer(UkRntrcRecognizer())
     registry.add_recognizer(UkPassportRecognizer())
     registry.add_recognizer(UkIbanRecognizer())

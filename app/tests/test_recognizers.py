@@ -59,6 +59,37 @@ def test_uk_name_recognition():
     assert "Шевченко Тарас Григорович" in text[person_results[0].start:person_results[0].end]
 
 
+def test_uk_organization_recognition():
+    text = "Договір укладено з ТОВ \"Агропром-Трейд\" та ФОП Іваненко І.В."
+    results = analyze_text(text)
+    org_results = [r for r in results if r.entity_type == "ORGANIZATION"]
+    assert len(org_results) >= 1
+    org_texts = [text[r.start:r.end] for r in org_results]
+    assert any("ТОВ" in t or "Агропром" in t for t in org_texts)
+
+
+def test_user_sample_organization_pseudonymization():
+    text = """Сторони:
+ТОВ «Альфа-Трейд» — компанія, що продає побутову техніку.
+ТОВ «ВебСофт» — IT-компанія, яка розробляє для «Альфа-Трейд» новий інтернет-магазин.
+
+Ситуація:
+За договором «ВебСофт» мав запустити новий сайт до 1 вересня. Вартість проєкту — 800 000 грн. «Альфа-Трейд» уже сплатив 70% суми."""
+
+    pseudo_text, mapping, entities = process_pseudonymization(text)
+
+    # Check that ALL occurrences of «Альфа-Трейд» and «ВебСофт» are pseudonymized
+    assert "Альфа-Трейд" not in pseudo_text
+    assert "ВебСофт" not in pseudo_text
+    assert "<ORG_1>" in pseudo_text
+    assert "<ORG_2>" in pseudo_text
+
+    # Verify that full restoration restores the company names into text
+    restored = process_restoration(pseudo_text, mapping)
+    assert "Альфа-Трейд" in restored
+    assert "ВебСофт" in restored
+
+
 def test_full_pipeline_pseudonymize_and_restore():
     original = "Позивач Шевченко Тарас Григорович, РНОКПП 3123456789, телефон +380501234567."
     pseudo_text, mapping, entities = process_pseudonymization(original)

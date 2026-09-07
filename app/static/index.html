@@ -269,6 +269,7 @@
         .tag-address { background: rgba(251, 146, 60, 0.25); color: #fdba74; border: 1px solid rgba(251, 146, 60, 0.4); }
         .tag-email { background: rgba(168, 85, 247, 0.25); color: #f0abfc; border: 1px solid rgba(168, 85, 247, 0.4); }
         .tag-vehicle { background: rgba(14, 165, 233, 0.25); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.4); }
+        .tag-org, .tag-organization { background: rgba(236, 72, 153, 0.25); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.4); }
 
         .token-mapping-table {
             width: 100%;
@@ -385,6 +386,86 @@
             margin-top: 3rem;
             border-top: 1px solid var(--card-border);
             padding-top: 1.5rem;
+        }
+
+        /* Modal Dialog Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-card {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 1rem;
+            padding: 1.75rem 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            color: var(--text-main);
+        }
+
+        .modal-header {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-body {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .modal-body strong {
+            color: var(--text-main);
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .btn-modal-replace {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-modal-replace:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
         }
     </style>
 </head>
@@ -516,6 +597,30 @@
                 </div>
                 <div id="restoredBox" class="pii-highlighted-box" style="height: 150px;">
                     <span style="color: var(--text-muted); font-style: italic;">Тут з'явиться підсумковий документ з відновленими реальними PII даними...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Token Deletion Confirmation -->
+        <div id="deleteModal" class="modal-overlay" style="display: none;" onclick="if(event.target===this) closeDeleteModal()">
+            <div class="modal-card">
+                <div class="modal-header">
+                    🗑️ Видалення токена <span id="modalTokenName" class="token-code" style="margin-left:0.3rem;"></span>
+                </div>
+                <div class="modal-body">
+                    Оригінальне значення: <strong id="modalOrigValue"></strong><br><br>
+                    Оберіть спосіб видалення даного токена з псевдонімізованого тексту:
+                </div>
+                <div class="modal-actions">
+                    <button id="modalBtnReplace" class="btn-modal-replace" onclick="confirmDeleteToken('replace')">
+                        🔄 <span id="modalBtnReplaceText">Замінити токен початковим текстом</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="confirmDeleteToken('remove')" style="justify-content: center;">
+                        🗑️ Просто видалити токен (без відновлення тексту)
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeDeleteModal()" style="justify-content: center; opacity: 0.7; margin-top: 0.25rem;">
+                        Скасувати
+                    </button>
                 </div>
             </div>
         </div>
@@ -655,36 +760,85 @@
             }
         }
 
+        let pendingDeleteState = null;
+
         function deleteMappingRow(btn) {
             const tr = btn.closest('tr');
-            if (tr) {
-                const tokenInput = tr.querySelector('.token-input');
-                
-                if (tokenInput) {
-                    const tokenVal = tokenInput.getAttribute('data-old-val') || tokenInput.value.trim();
+            if (!tr) return;
 
-                    if (tokenVal) {
-                        const pseudoBox = document.getElementById('pseudonymizedBox');
-                        const llmBox = document.getElementById('llmBox');
+            const tokenInput = tr.querySelector('.token-input');
+            const valueInput = tr.querySelector('.value-input');
 
-                        if (pseudoBox && pseudoBox.value && !pseudoBox.value.includes('Псевдонімізований текст з унікальними')) {
-                            pseudoBox.value = pseudoBox.value.split(tokenVal).join('').replace(/  +/g, ' ');
-                        }
+            const tokenVal = tokenInput ? (tokenInput.getAttribute('data-old-val') || tokenInput.value.trim()) : '';
+            const origVal = valueInput ? valueInput.value.trim() : '';
 
-                        if (llmBox && llmBox.value) {
-                            llmBox.value = llmBox.value.split(tokenVal).join('').replace(/  +/g, ' ');
-                        }
-                    }
-                }
-
+            if (tokenVal) {
+                pendingDeleteState = { tr, tokenVal, origVal };
+                showDeleteModal(tokenVal, origVal);
+            } else {
                 tr.remove();
+                const tbody = document.getElementById('mappingTableBody');
+                if (tbody.children.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="color: var(--text-muted); font-style: italic;">Словник порожній</td></tr>';
+                }
+                updateMappingFromTable();
             }
+        }
+
+        function showDeleteModal(tokenVal, origVal) {
+            document.getElementById('modalTokenName').textContent = tokenVal;
+            document.getElementById('modalOrigValue').textContent = origVal ? `«${origVal}»` : '(порожньо)';
+            
+            const btnReplace = document.getElementById('modalBtnReplace');
+            const btnReplaceText = document.getElementById('modalBtnReplaceText');
+
+            if (origVal) {
+                btnReplace.style.display = 'flex';
+                btnReplaceText.textContent = `Замінити токен початковим текстом ("${origVal}")`;
+            } else {
+                btnReplace.style.display = 'none';
+            }
+
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+            pendingDeleteState = null;
+        }
+
+        function confirmDeleteToken(action) {
+            if (!pendingDeleteState) return;
+            const { tr, tokenVal, origVal } = pendingDeleteState;
+
+            const pseudoBox = document.getElementById('pseudonymizedBox');
+            const llmBox = document.getElementById('llmBox');
+
+            if (action === 'replace') {
+                if (pseudoBox && pseudoBox.value && !pseudoBox.value.includes('Псевдонімізований текст з унікальними')) {
+                    pseudoBox.value = pseudoBox.value.split(tokenVal).join(origVal);
+                }
+                if (llmBox && llmBox.value) {
+                    llmBox.value = llmBox.value.split(tokenVal).join(origVal);
+                }
+            } else if (action === 'remove') {
+                if (pseudoBox && pseudoBox.value && !pseudoBox.value.includes('Псевдонімізований текст з унікальними')) {
+                    pseudoBox.value = pseudoBox.value.split(tokenVal).join('').replace(/  +/g, ' ');
+                }
+                if (llmBox && llmBox.value) {
+                    llmBox.value = llmBox.value.split(tokenVal).join('').replace(/  +/g, ' ');
+                }
+            }
+
+            if (tr) tr.remove();
 
             const tbody = document.getElementById('mappingTableBody');
             if (tbody.children.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="3" style="color: var(--text-muted); font-style: italic;">Словник порожній</td></tr>';
             }
+
             updateMappingFromTable();
+            closeDeleteModal();
         }
 
         function updateMappingFromTable() {

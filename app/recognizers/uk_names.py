@@ -6,7 +6,9 @@ LEGAL_TITLE_WORDS = {
     "позивач", "відповідач", "громадянин", "громадянка", "сторона", "медіатор",
     "представник", "адвокат", "фізична", "особа", "пан", "пані", "гр", "підписант",
     "директор", "менеджер", "заявник", "скаржник", "орендодавець", "орендар",
-    "суд", "суддя", "печерський", "районний", "документ", "заяви", "заява"
+    "суд", "суддя", "печерський", "районний", "документ", "заяви", "заява",
+    "договір", "договору", "укладено", "між", "акт", "акту", "ухвала", "рішення",
+    "код", "єдрпоу", "код єдрпоу", "єгрпоу"
 }
 
 
@@ -24,7 +26,7 @@ class UkNameRecognizer(PatternRecognizer):
         Pattern(
             name="uk_name_full_pib",
             regex=r"\b[А-ЯІЇЄҐ][а-яіїєґ]+(?:\s+[А-ЯІЇЄҐ][а-яіїєґ]+)\s+[А-ЯІЇЄҐ][а-яіїєґ]+(?:вич|вна|івна|ївна|евич|ович)\b",
-            score=0.98,
+            score=1.0,
         ),
         # Surname with Initials: Іваненко І. В. or Іваненко І.В.
         Pattern(
@@ -69,16 +71,16 @@ class UkNameRecognizer(PatternRecognizer):
 
     def validate_result(self, pattern_text: str) -> Optional[bool]:
         """
-        Validate that the matched text does not start with legal title words (e.g. 'Позивач').
+        Validate that the matched text does not contain legal title or document words (e.g. 'Позивач', 'Договір').
         Return False to invalidate bad matches, None to preserve pattern confidence score.
         """
         words = pattern_text.strip().split()
         if not words:
             return False
 
-        first_word = words[0].lower()
-        if first_word in LEGAL_TITLE_WORDS:
-            return False
+        for w in words:
+            if w.lower().strip(".,:;()\"'") in LEGAL_TITLE_WORDS:
+                return False
 
         # Returning None preserves the pattern's score (e.g. 0.98) instead of forcing score to 1.0
         return None

@@ -5,6 +5,8 @@ from app.schemas.api import DetectedEntity
 
 ENTITY_TAG_PREFIXES = {
     "PERSON": "PERSON",
+    "ORGANIZATION": "ORG",
+    "ORG": "ORG",
     "UK_RNTRC": "RNTRC",
     "UK_PASSPORT": "PASSPORT",
     "UK_IBAN": "IBAN",
@@ -57,10 +59,23 @@ class TokenMapper:
     def get_or_create_token(self, entity_type: str, raw_value: str) -> str:
         clean_value = raw_value.strip()
         
-        # Key by entity_type + clean_value to preserve entity differentiation
-        lookup_key = f"{entity_type}::{clean_value.lower()}"
-        if lookup_key in self.value_to_token:
-            return self.value_to_token[lookup_key]
+        # Core key normalization for organizations to unify variants (e.g. ТОВ «Альфа-Трейд» vs «Альфа-Трейд»)
+        if entity_type in ("ORGANIZATION", "ORG"):
+            import re
+            core_name = re.sub(r"^(?:ТОВ|ТзОВ|ПП|ПрАТ|ПАТ|АТ|ДП|ГО|ОСББ|БФ|ФОП)\s*", "", clean_value)
+            core_name = core_name.strip(" \"«'“»'”").lower()
+            lookup_key = f"ORGANIZATION::{core_name}"
+            
+            if lookup_key in self.value_to_token:
+                token = self.value_to_token[lookup_key]
+                # Upgrade mapping value to fuller form if current clean_value is longer (e.g., contains ТОВ prefix)
+                if len(clean_value) > len(self.token_to_value[token]):
+                    self.token_to_value[token] = clean_value
+                return token
+        else:
+            lookup_key = f"{entity_type}::{clean_value.lower()}"
+            if lookup_key in self.value_to_token:
+                return self.value_to_token[lookup_key]
 
         prefix = ENTITY_TAG_PREFIXES.get(entity_type, entity_type.upper())
         count = self.entity_counts.get(prefix, 0) + 1
