@@ -48,13 +48,13 @@ def create_uk_analyzer_engine() -> AnalyzerEngine:
         provider = NlpEngineProvider(
             nlp_configuration={
                 "nlp_engine_name": "spacy",
-                "models": [{"lang_code": "uk", "model_name": "uk_core_news_sm"}],
+                "models": [{"lang_code": "uk", "model_name": "uk_core_news_trf"}],
             }
         )
         nlp_engine = provider.create_engine()
-        logger.info("Successfully loaded spacy model 'uk_core_news_sm' for NLP engine.")
+        logger.info("Successfully loaded spacy model 'uk_core_news_trf' for NLP engine.")
     except Exception as e:
-        logger.warning(f"Could not load spacy 'uk_core_news_sm' model ({e}). Fallback to pattern-based Ukrainian analysis.")
+        logger.warning(f"Could not load spacy 'uk_core_news_trf' model ({e}). Fallback to pattern-based Ukrainian analysis.")
 
     # Register custom Ukrainian recognizers
     #registry.add_recognizer(UkNameRecognizer())
