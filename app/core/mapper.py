@@ -1,6 +1,57 @@
-from typing import Dict, List, Tuple
+import re
+from typing import Dict, List, Optional, Tuple
+import pymorphy3
 from presidio_analyzer import RecognizerResult
 from app.schemas.api import DetectedEntity
+
+_morph_analyzer: Optional[pymorphy3.MorphAnalyzer] = None
+
+
+def get_morph_analyzer() -> pymorphy3.MorphAnalyzer:
+    global _morph_analyzer
+    if _morph_analyzer is None:
+        _morph_analyzer = pymorphy3.MorphAnalyzer(lang='uk')
+    return _morph_analyzer
+
+
+def normalize_uk_person_name(raw_name: str) -> str:
+    """
+    Normalizes Ukrainian person names from any grammatical case to base nominative case (називний відмінок).
+    Examples:
+      - 'Андрія Мельника' -> 'Андрій Мельник'
+      - 'Андрієм Мельником' -> 'Андрій Мельник'
+      - 'Шевченка Тараса Григоровича' -> 'Шевченко Тарас Григорович'
+    """
+    clean = raw_name.strip()
+    if not clean:
+        return clean
+
+    morph = get_morph_analyzer()
+    words = clean.split()
+    norm_words = []
+
+    for w in words:
+        # Preserve initials like І., І.В., В.
+        if re.match(r'^[А-ЯІЇЄҐ]\.?(?:[А-ЯІЇЄҐ]\.?)?$', w, re.IGNORECASE):
+            norm_words.append(w.upper())
+            continue
+
+        # Handle hyphenated names like Гулака-Артемовського
+        if '-' in w:
+            parts = w.split('-')
+            norm_parts = []
+            for p in parts:
+                parses = morph.parse(p)
+                lemma = parses[0].normal_form if parses else p
+                norm_parts.append(lemma.capitalize())
+            norm_words.append('-'.join(norm_parts))
+            continue
+
+        parses = morph.parse(w)
+        lemma = parses[0].normal_form if parses else w
+        norm_words.append(lemma.capitalize())
+
+    return ' '.join(norm_words)
 
 
 ENTITY_TAG_PREFIXES = {
@@ -58,10 +109,29 @@ class TokenMapper:
 
     def get_or_create_token(self, entity_type: str, raw_value: str) -> str:
         clean_value = raw_value.strip()
+
+        # Person name lemmatization/normalization to base nominative form
+        if entity_type == "PERSON":
+            normalized_name = normalize_uk_person_name(clean_value)
+            lookup_key = f"PERSON::{normalized_name.lower()}"
+
+            if lookup_key in self.value_to_token:
+                token = self.value_to_token[lookup_key]
+                # Ensure mapping dictionary holds the normalized base name
+                self.token_to_value[token] = normalized_name
+                return token
+
+            prefix = ENTITY_TAG_PREFIXES.get(entity_type, entity_type.upper())
+            count = self.entity_counts.get(prefix, 0) + 1
+            self.entity_counts[prefix] = count
+
+            token = f"<{prefix}_{count}>"
+            self.value_to_token[lookup_key] = token
+            self.token_to_value[token] = normalized_name
+            return token
         
         # Core key normalization for organizations to unify variants (e.g. ТОВ «Альфа-Трейд» vs «Альфа-Трейд»)
-        if entity_type in ("ORGANIZATION", "ORG"):
-            import re
+        elif entity_type in ("ORGANIZATION", "ORG"):
             core_name = re.sub(r"^(?:ТОВ|ТзОВ|ПП|ПрАТ|ПАТ|АТ|ДП|ГО|ОСББ|БФ|ФОП)\s*", "", clean_value)
             core_name = core_name.strip(" \"«'“»'”").lower()
             lookup_key = f"ORGANIZATION::{core_name}"

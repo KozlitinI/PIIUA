@@ -108,3 +108,17 @@ def test_full_pipeline_pseudonymize_and_restore():
     # Check restoration
     restored = process_restoration(pseudo_text, mapping)
     assert restored == original
+
+
+def test_uk_person_name_lemmatization():
+    text = "Позивач — Андрій Мельник. Документ укладено з Андрієм Мельником. Позови до Андрія Мельника відхилено."
+    pseudo_text, mapping, entities = process_pseudonymization(text)
+
+    # All inflected forms of "Андрій Мельник" must resolve to the same single token <PERSON_1>
+    assert "<PERSON_1>" in pseudo_text
+    assert "Андрія Мельника" not in pseudo_text
+    assert "Андрій Мельник" not in pseudo_text
+    assert "Андрієм Мельником" not in pseudo_text
+
+    # The mapping should hold the base nominative form
+    assert mapping["<PERSON_1>"] == "Андрій Мельник"
