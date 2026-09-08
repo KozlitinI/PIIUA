@@ -11,7 +11,7 @@ class UkPhoneRecognizer(PatternRecognizer):
         # Full international format with optional + prefix
         Pattern(
             name="uk_phone_intl",
-            regex=r"(?:(?<=\s)|(?<=^)|(?<=\())?\+?38[\s\.-]?\(?0\d{2}\)?[\s\.-]?\d{3}[\s\.-]?\d{2}[\s\.-]?\d{2}\b",
+            regex=r"(?:(?<=\s)|(?<=^)|(?<=\())?\+?38[\s\.-]?\(?0\s?\d{2}\)?[\s\.-]?\d{3}[\s\.-]?\d{2}[\s\.-]?\d{2}\b",
             score=0.85,
         ),
         # Local 10-digit format: 0501234567 or (044) 200-11-22

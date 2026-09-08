@@ -11,7 +11,7 @@ class UkPassportRecognizer(PatternRecognizer):
         # Paper passport: 2 Cyrillic uppercase letters + optional space + 6 digits
         Pattern(
             name="uk_passport_paper",
-            regex=r"\b[А-ЯІЇЄҐ]{2}\s?\d{6}\b",
+            regex=r"\b[А-ЯІЇЄҐ]{2}\s?№?\s?\d{6}\b",
             score=0.85,
         ),
         # ID-card 9 digits with explicit prefix or standalone when context present
