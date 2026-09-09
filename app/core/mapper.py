@@ -14,12 +14,23 @@ def get_morph_analyzer() -> pymorphy3.MorphAnalyzer:
     return _morph_analyzer
 
 
+NAME_OVERRIDES = {
+    'марка': 'Марко',
+    'марку': 'Марко',
+    'марком': 'Марко',
+    'маркові': 'Марко',
+    'марко': 'Марко',
+}
+
+
 def normalize_uk_person_name(raw_name: str) -> str:
     """
     Normalizes Ukrainian person names from any grammatical case to base nominative case (називний відмінок).
     Examples:
       - 'Андрія Мельника' -> 'Андрій Мельник'
       - 'Андрієм Мельником' -> 'Андрій Мельник'
+      - 'Марка' -> 'Марко'
+      - 'Марка Шевченка' -> 'Марко Шевченко'
       - 'Шевченка Тараса Григоровича' -> 'Шевченко Тарас Григорович'
     """
     clean = raw_name.strip()
@@ -31,6 +42,11 @@ def normalize_uk_person_name(raw_name: str) -> str:
     norm_words = []
 
     for w in words:
+        w_lower = w.lower()
+        if w_lower in NAME_OVERRIDES:
+            norm_words.append(NAME_OVERRIDES[w_lower])
+            continue
+
         # Preserve initials like І., І.В., В.
         if re.match(r'^[А-ЯІЇЄҐ]\.?(?:[А-ЯІЇЄҐ]\.?)?$', w, re.IGNORECASE):
             norm_words.append(w.upper())
@@ -41,14 +57,21 @@ def normalize_uk_person_name(raw_name: str) -> str:
             parts = w.split('-')
             norm_parts = []
             for p in parts:
-                parses = morph.parse(p)
-                lemma = parses[0].normal_form if parses else p
-                norm_parts.append(lemma.capitalize())
+                p_lower = p.lower()
+                if p_lower in NAME_OVERRIDES:
+                    norm_parts.append(NAME_OVERRIDES[p_lower])
+                else:
+                    parses = morph.parse(p)
+                    name_parse = next((item for item in parses if 'Name' in item.tag and 'masc' in item.tag), None)
+                    lemma = name_parse.normal_form if name_parse else (parses[0].normal_form if parses else p)
+                    norm_parts.append(lemma.capitalize())
             norm_words.append('-'.join(norm_parts))
             continue
 
         parses = morph.parse(w)
-        lemma = parses[0].normal_form if parses else w
+        # Filter for proper name parse if available to avoid common inanimate nouns (e.g. марка -> stamp)
+        name_parse = next((item for item in parses if 'Name' in item.tag), None)
+        lemma = name_parse.normal_form if name_parse else (parses[0].normal_form if parses else w)
         norm_words.append(lemma.capitalize())
 
     return ' '.join(norm_words)

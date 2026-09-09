@@ -122,3 +122,17 @@ def test_uk_person_name_lemmatization():
 
     # The mapping should hold the base nominative form
     assert mapping["<PERSON_1>"] == "Андрій Мельник"
+
+
+def test_uk_person_name_marko_lemmatization():
+    text = "Позивач — Марко. Документ укладено з Марком. Позови від Марка було розглянуто."
+    pseudo_text, mapping, entities = process_pseudonymization(text)
+
+    # All inflected forms of "Марко" (Марко, Марком, Марка) must resolve to the same single token <PERSON_1>
+    assert "<PERSON_1>" in pseudo_text
+    assert "Марка" not in pseudo_text
+    assert "Марком" not in pseudo_text
+    assert "Марко" not in pseudo_text
+
+    # The mapping should hold the base nominative form "Марко"
+    assert mapping["<PERSON_1>"] == "Марко"
