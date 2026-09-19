@@ -1,5 +1,12 @@
 import sys
 import os
+import warnings
+
+# Suppress PyTorch / Python 3.14 FutureWarnings on import
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", message=".*torch.jit.script.*")
+warnings.filterwarnings("ignore", category=UserWarning)
+
 import time
 import webbrowser
 import threading

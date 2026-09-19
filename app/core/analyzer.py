@@ -1,3 +1,8 @@
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", message=".*torch.jit.script.*")
+warnings.filterwarnings("ignore", category=UserWarning)
+
 import logging
 from typing import List, Optional
 import spacy
