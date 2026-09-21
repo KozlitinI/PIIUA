@@ -561,7 +561,7 @@
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                     <h4 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Словник Оборотної Мапи (Редагований)</h4>
-                    <button class="btn btn-secondary btn-sample" onclick="addMappingRow('', '')" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">+ Додати токен</button>
+                    <button class="btn btn-secondary btn-sample" onclick="openAddTokenModal()" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">+ Додати токен</button>
                 </div>
                 <div style="max-height: 170px; overflow-y: auto;">
                     <table class="token-mapping-table">
@@ -616,6 +616,36 @@
                         🗑️ Просто видалити токен (без відновлення тексту)
                     </button>
                     <button class="btn btn-secondary" onclick="closeDeleteModal()" style="justify-content: center; opacity: 0.7; margin-top: 0.25rem;">
+                        Скасувати
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Adding New Custom Token -->
+        <div id="addTokenModal" class="modal-overlay" style="display: none;" onclick="if(event.target===this) closeAddTokenModal()">
+            <div class="modal-card">
+                <div class="modal-header">
+                    ➕ Додати Новий Токен
+                </div>
+                <div class="modal-body" style="margin-bottom: 1rem;">
+                    Вкажіть оригінальні дані (текст у документі) та токен, яким його буде замінено в псевдонімізованому тексті.
+                    <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.25rem;">Оригінальні PII дані (текст для заміни):</label>
+                            <input type="text" id="addOrigValueInput" placeholder="напр. ТОВ «Техно-Сервіс» або Петренко В.О." class="value-input" style="padding: 0.5rem; font-size: 0.9rem;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.25rem;">Новий токен:</label>
+                            <input type="text" id="addTokenInput" placeholder="напр. <CUSTOM_1> або <ORG_3>" class="token-input" style="padding: 0.5rem; font-size: 0.9rem;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-modal-replace" onclick="submitAddToken()">
+                        ⚡ Замінити в тексті та додати до словника
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeAddTokenModal()" style="justify-content: center; opacity: 0.7;">
                         Скасувати
                     </button>
                 </div>
@@ -802,6 +832,71 @@
         function closeDeleteModal() {
             document.getElementById('deleteModal').style.display = 'none';
             pendingDeleteState = null;
+        }
+
+        let customTokenCounter = 1;
+
+        function openAddTokenModal() {
+            const origInput = document.getElementById('addOrigValueInput');
+            const tokenInput = document.getElementById('addTokenInput');
+            
+            origInput.value = '';
+            
+            let suggestedToken = `<CUSTOM_${customTokenCounter}>`;
+            while (currentMapping[suggestedToken]) {
+                customTokenCounter++;
+                suggestedToken = `<CUSTOM_${customTokenCounter}>`;
+            }
+            tokenInput.value = suggestedToken;
+
+            document.getElementById('addTokenModal').style.display = 'flex';
+            setTimeout(() => origInput.focus(), 100);
+        }
+
+        function closeAddTokenModal() {
+            document.getElementById('addTokenModal').style.display = 'none';
+        }
+
+        function submitAddToken() {
+            const origValue = document.getElementById('addOrigValueInput').value.trim();
+            let tokenVal = document.getElementById('addTokenInput').value.trim();
+
+            if (!origValue) {
+                alert('Будь ласка, вкажіть оригінальні дані (текст), які потрібно замінити токеном.');
+                return;
+            }
+
+            if (!tokenVal) {
+                alert('Будь ласка, вкажіть назву токена (напр. <CUSTOM_1>).');
+                return;
+            }
+
+            // Ensure token has angle brackets <...>
+            if (!tokenVal.startsWith('<')) tokenVal = '<' + tokenVal;
+            if (!tokenVal.endsWith('>')) tokenVal = tokenVal + '>';
+
+            const pseudoBox = document.getElementById('pseudonymizedBox');
+            const llmBox = document.getElementById('llmBox');
+
+            // 1. Replace all occurrences of origValue with tokenVal in pseudonymizedBox
+            if (pseudoBox && pseudoBox.value) {
+                if (pseudoBox.value.includes(origValue)) {
+                    pseudoBox.value = pseudoBox.value.split(origValue).join(tokenVal);
+                }
+            }
+
+            // 2. Replace all occurrences in llmBox if present
+            if (llmBox && llmBox.value) {
+                if (llmBox.value.includes(origValue)) {
+                    llmBox.value = llmBox.value.split(origValue).join(tokenVal);
+                }
+            }
+
+            // 3. Add to Mapping Table & update currentMapping
+            addMappingRow(tokenVal, origValue, true);
+
+            customTokenCounter++;
+            closeAddTokenModal();
         }
 
         function confirmDeleteToken(action) {
