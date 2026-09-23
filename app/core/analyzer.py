@@ -74,7 +74,7 @@ UK_EMAIL_RECOGNIZER = PatternRecognizer(
 def create_uk_analyzer_engine(model_name: str = "uk_core_news_trf") -> AnalyzerEngine:
     """
     Creates and configures Presidio AnalyzerEngine with Ukrainian recognizers.
-    Safely loads requested spaCy model (uk_core_news_trf or uk_core_news_sm).
+    Safely loads requested spaCy model (uk_core_news_trf, uk_core_news_lg, or uk_core_news_sm).
     """
     registry = RecognizerRegistry(supported_languages=["uk", "en"])
     try:
@@ -85,7 +85,8 @@ def create_uk_analyzer_engine(model_name: str = "uk_core_news_trf") -> AnalyzerE
     # 1. Load requested Ukrainian spaCy model
     nlp_uk = None
     model_name_uk = "none"
-    requested_model = model_name if model_name in ("uk_core_news_trf", "uk_core_news_sm") else "uk_core_news_trf"
+    valid_models = ("uk_core_news_trf", "uk_core_news_lg", "uk_core_news_sm")
+    requested_model = model_name if model_name in valid_models else "uk_core_news_trf"
 
     # Try loading requested model
     if requested_model == "uk_core_news_trf":
@@ -100,7 +101,22 @@ def create_uk_analyzer_engine(model_name: str = "uk_core_news_trf") -> AnalyzerE
                 model_name_uk = "uk_core_news_trf"
                 logger.info("Successfully loaded spacy model 'uk_core_news_trf' via spacy.load.")
             except Exception as e2:
-                logger.warning(f"Could not load uk_core_news_trf ({e1}, {e2}). Trying fallback to uk_core_news_sm...")
+                logger.warning(f"Could not load uk_core_news_trf ({e1}, {e2}). Trying fallback to uk_core_news_lg...")
+                requested_model = "uk_core_news_lg"
+
+    if requested_model == "uk_core_news_lg" and nlp_uk is None:
+        try:
+            import uk_core_news_lg
+            nlp_uk = uk_core_news_lg.load()
+            model_name_uk = "uk_core_news_lg"
+            logger.info("Successfully loaded spacy model 'uk_core_news_lg' via direct package import.")
+        except Exception as e1:
+            try:
+                nlp_uk = spacy.load("uk_core_news_lg")
+                model_name_uk = "uk_core_news_lg"
+                logger.info("Successfully loaded spacy model 'uk_core_news_lg' via spacy.load.")
+            except Exception as e2:
+                logger.warning(f"Could not load uk_core_news_lg ({e1}, {e2}). Trying fallback to uk_core_news_sm...")
                 requested_model = "uk_core_news_sm"
 
     if requested_model == "uk_core_news_sm" and nlp_uk is None:
@@ -172,7 +188,8 @@ _analyzer_instances: Dict[str, AnalyzerEngine] = {}
 
 def get_analyzer_engine(model_name: str = "uk_core_news_trf") -> AnalyzerEngine:
     global _analyzer_instances
-    key = model_name if model_name in ("uk_core_news_trf", "uk_core_news_sm") else "uk_core_news_trf"
+    valid_models = ("uk_core_news_trf", "uk_core_news_lg", "uk_core_news_sm")
+    key = model_name if model_name in valid_models else "uk_core_news_trf"
     if key not in _analyzer_instances:
         _analyzer_instances[key] = create_uk_analyzer_engine(model_name=key)
     return _analyzer_instances[key]
