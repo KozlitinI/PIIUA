@@ -10,12 +10,18 @@ from app.schemas.api import DetectedEntity
 def process_pseudonymization(
     text: str,
     score_threshold: float = 0.4,
-    language: str = "uk"
+    language: str = "uk",
+    model_name: str = "uk_core_news_trf"
 ) -> Tuple[str, Dict[str, str], List[DetectedEntity]]:
     """
     Analyzes text and applies reversible structured token pseudonymization.
     """
-    raw_results = analyze_text(text=text, score_threshold=score_threshold, language=language)
+    raw_results = analyze_text(
+        text=text,
+        score_threshold=score_threshold,
+        language=language,
+        model_name=model_name
+    )
     pseudo_text, mapping, entities = pseudonymize_text_with_mapping(text, raw_results)
     return pseudo_text, mapping, entities
 

@@ -1,11 +1,13 @@
+import logging
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", message=".*torch.jit.script.*")
 warnings.filterwarnings("ignore", category=UserWarning)
 
-import logging
-from typing import List, Optional
-import spacy
+try:
+    import spacy
+except Exception as _e_spacy:
+    spacy = None
 
 # Explicitly import all spacy_curated_transformers components & architectures to register them into spaCy's global registry for PyInstaller frozen mode
 try:
@@ -69,10 +71,10 @@ UK_EMAIL_RECOGNIZER = PatternRecognizer(
 )
 
 
-def create_uk_analyzer_engine() -> AnalyzerEngine:
+def create_uk_analyzer_engine(model_name: str = "uk_core_news_trf") -> AnalyzerEngine:
     """
     Creates and configures Presidio AnalyzerEngine with Ukrainian recognizers.
-    Safely loads spaCy models in standalone PyInstaller environments without triggering spacy.cli.download.
+    Safely loads requested spaCy model (uk_core_news_trf or uk_core_news_sm).
     """
     registry = RecognizerRegistry(supported_languages=["uk", "en"])
     try:
@@ -80,49 +82,72 @@ def create_uk_analyzer_engine() -> AnalyzerEngine:
     except Exception as e:
         logger.warning(f"Could not load predefined recognizers: {e}")
     
-    # 1. Load Ukrainian spaCy model directly via package import or spacy.load fallback
+    # 1. Load requested Ukrainian spaCy model
     nlp_uk = None
     model_name_uk = "none"
+    requested_model = model_name if model_name in ("uk_core_news_trf", "uk_core_news_sm") else "uk_core_news_trf"
 
-    try:
-        import uk_core_news_trf
-        nlp_uk = uk_core_news_trf.load()
-        model_name_uk = "uk_core_news_trf"
-        logger.info("Successfully loaded spacy model 'uk_core_news_trf' via direct package import.")
-    except Exception as e1:
-        logger.warning(f"Could not import uk_core_news_trf directly ({e1}). Trying uk_core_news_sm...")
+    # Try loading requested model
+    if requested_model == "uk_core_news_trf":
+        try:
+            import uk_core_news_trf
+            nlp_uk = uk_core_news_trf.load()
+            model_name_uk = "uk_core_news_trf"
+            logger.info("Successfully loaded spacy model 'uk_core_news_trf' via direct package import.")
+        except Exception as e1:
+            try:
+                nlp_uk = spacy.load("uk_core_news_trf")
+                model_name_uk = "uk_core_news_trf"
+                logger.info("Successfully loaded spacy model 'uk_core_news_trf' via spacy.load.")
+            except Exception as e2:
+                logger.warning(f"Could not load uk_core_news_trf ({e1}, {e2}). Trying fallback to uk_core_news_sm...")
+                requested_model = "uk_core_news_sm"
+
+    if requested_model == "uk_core_news_sm" and nlp_uk is None:
         try:
             import uk_core_news_sm
             nlp_uk = uk_core_news_sm.load()
             model_name_uk = "uk_core_news_sm"
             logger.info("Successfully loaded spacy model 'uk_core_news_sm' via direct package import.")
-        except Exception as e2:
-            logger.warning(f"Could not import uk_core_news_sm directly ({e2}). Trying spacy.load...")
+        except Exception as e1:
             try:
-                nlp_uk = spacy.load("uk_core_news_trf")
-                model_name_uk = "uk_core_news_trf"
-            except Exception:
-                try:
-                    nlp_uk = spacy.load("uk_core_news_sm")
-                    model_name_uk = "uk_core_news_sm"
-                except Exception as e3:
-                    logger.warning(f"Could not load spaCy Ukrainian model ({e3}). Fallback to blank model.")
+                nlp_uk = spacy.load("uk_core_news_sm")
+                model_name_uk = "uk_core_news_sm"
+                logger.info("Successfully loaded spacy model 'uk_core_news_sm' via spacy.load.")
+            except Exception as e2:
+                logger.warning(f"Could not load uk_core_news_sm ({e1}, {e2}). Fallback to blank model.")
 
     if nlp_uk is None:
-        nlp_uk = spacy.blank("uk")
+        if spacy is not None:
+            try:
+                nlp_uk = spacy.blank("uk")
+            except Exception:
+                nlp_uk = None
+        model_name_uk = "none"
 
     # 2. Load or fallback English model to prevent Presidio from calling spacy.cli.download
-    try:
-        nlp_en = spacy.load("en_core_web_sm")
-    except Exception:
-        nlp_en = spacy.blank("en")
+    nlp_en = None
+    if spacy is not None:
+        try:
+            nlp_en = spacy.load("en_core_web_sm")
+        except Exception:
+            try:
+                nlp_en = spacy.blank("en")
+            except Exception:
+                nlp_en = None
 
     # 3. Construct SpacyNlpEngine with explicitly assigned loaded spaCy pipelines
-    nlp_engine = SpacyNlpEngine(models={"uk": model_name_uk, "en": "en"})
-    nlp_engine.nlp = {"uk": nlp_uk, "en": nlp_en}
+    nlp_engine = None
+    if nlp_uk is not None:
+        try:
+            nlp_engine = SpacyNlpEngine(models={"uk": model_name_uk, "en": "en"})
+            nlp_engine.nlp = {"uk": nlp_uk, "en": nlp_en or nlp_uk}
+        except Exception as _e_nlp:
+            logger.warning(f"Could not initialize SpacyNlpEngine ({_e_nlp}). Fallback to pattern-based analysis.")
+            nlp_engine = None
 
     # Register custom Ukrainian recognizers
-#    registry.add_recognizer(UkNameRecognizer())
+    #registry.add_recognizer(UkNameRecognizer())
     registry.add_recognizer(UkOrganizationRecognizer())
     registry.add_recognizer(UkRntrcRecognizer())
     registry.add_recognizer(UkPassportRecognizer())
@@ -141,22 +166,28 @@ def create_uk_analyzer_engine() -> AnalyzerEngine:
     return analyzer
 
 
-# Singleton instance
-_analyzer_instance: Optional[AnalyzerEngine] = None
+# Cache of analyzer engine instances per model name
+_analyzer_instances: Dict[str, AnalyzerEngine] = {}
 
 
-def get_analyzer_engine() -> AnalyzerEngine:
-    global _analyzer_instance
-    if _analyzer_instance is None:
-        _analyzer_instance = create_uk_analyzer_engine()
-    return _analyzer_instance
+def get_analyzer_engine(model_name: str = "uk_core_news_trf") -> AnalyzerEngine:
+    global _analyzer_instances
+    key = model_name if model_name in ("uk_core_news_trf", "uk_core_news_sm") else "uk_core_news_trf"
+    if key not in _analyzer_instances:
+        _analyzer_instances[key] = create_uk_analyzer_engine(model_name=key)
+    return _analyzer_instances[key]
 
 
-def analyze_text(text: str, score_threshold: float = 0.4, language: str = "uk") -> List[RecognizerResult]:
+def analyze_text(
+    text: str,
+    score_threshold: float = 0.4,
+    language: str = "uk",
+    model_name: str = "uk_core_news_trf"
+) -> List[RecognizerResult]:
     """
-    Analyzes input text for PII entities.
+    Analyzes input text for PII entities using requested spaCy model.
     """
-    engine = get_analyzer_engine()
+    engine = get_analyzer_engine(model_name=model_name)
     results = engine.analyze(
         text=text,
         language=language,

@@ -13,6 +13,7 @@ class DetectedEntity(BaseModel):
 class AnalyzeRequest(BaseModel):
     text: str = Field(..., description="Raw text to analyze for PII")
     score_threshold: Optional[float] = Field(0.4, description="Minimum confidence threshold")
+    model_name: Optional[str] = Field("uk_core_news_trf", description="spaCy Ukrainian model name (uk_core_news_trf or uk_core_news_sm)")
 
 
 class AnalyzeResponse(BaseModel):
@@ -22,6 +23,7 @@ class AnalyzeResponse(BaseModel):
 class PseudonymizeRequest(BaseModel):
     text: str = Field(..., description="Document or text to pseudonymize")
     score_threshold: Optional[float] = Field(0.4, description="Minimum confidence threshold")
+    model_name: Optional[str] = Field("uk_core_news_trf", description="spaCy Ukrainian model name (uk_core_news_trf or uk_core_news_sm)")
 
 
 class PseudonymizeResponse(BaseModel):

@@ -57,7 +57,12 @@ async def analyze_pii(request: AnalyzeRequest):
     Detect PII entities in Ukrainian text without modifying the text.
     """
     try:
-        raw_results = analyze_text(text=request.text, score_threshold=request.score_threshold)
+        model_name = request.model_name or "uk_core_news_trf"
+        raw_results = analyze_text(
+            text=request.text,
+            score_threshold=request.score_threshold,
+            model_name=model_name
+        )
         entities = [
             DetectedEntity(
                 entity_type=r.entity_type,
@@ -80,9 +85,11 @@ async def pseudonymize_pii(request: PseudonymizeRequest):
     Returns the pseudonymized text, the bidirectional token mapping dictionary, and detected entities.
     """
     try:
+        model_name = request.model_name or "uk_core_news_trf"
         pseudo_text, mapping, entities = process_pseudonymization(
             text=request.text,
-            score_threshold=request.score_threshold
+            score_threshold=request.score_threshold,
+            model_name=model_name
         )
         return PseudonymizeResponse(
             pseudonymized_text=pseudo_text,
