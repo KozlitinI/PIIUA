@@ -16,6 +16,7 @@ datas = [
 datas += collect_data_files('presidio_analyzer', include_py_files=True)
 datas += collect_data_files('presidio_anonymizer', include_py_files=True)
 datas += collect_data_files('uk_core_news_sm', include_py_files=True)
+datas += collect_data_files('uk_core_news_lg', include_py_files=True)
 datas += collect_data_files('uk_core_news_trf', include_py_files=True)
 datas += collect_data_files('spacy', include_py_files=True)
 datas += collect_data_files('spacy_curated_transformers', include_py_files=True)
@@ -27,8 +28,27 @@ datas += copy_metadata('spacy_curated_transformers')
 datas += copy_metadata('curated_transformers')
 datas += copy_metadata('curated_tokenizers')
 datas += copy_metadata('uk_core_news_trf')
+datas += copy_metadata('uk_core_news_lg')
 datas += copy_metadata('uk_core_news_sm')
 datas += copy_metadata('spacy')
+
+def collect_submodules_fs(package_name):
+    mods = set()
+    for p in sys.path:
+        if 'site-packages' in p or p == '.':
+            pkg_dir = os.path.join(p, package_name.replace('.', os.sep))
+            if os.path.isdir(pkg_dir):
+                for root, dirs, files in os.walk(pkg_dir):
+                    rel_path = os.path.relpath(root, p)
+                    mod_prefix = rel_path.replace(os.sep, '.')
+                    for f in files:
+                        if f.endswith(('.py', '.pyd', '.so')):
+                            name = f.split('.')[0]
+                            if name == '__init__':
+                                mods.add(mod_prefix)
+                            else:
+                                mods.add(f'{mod_prefix}.{name}')
+    return list(mods)
 
 # Hidden imports for FastAPI, Uvicorn, Presidio, spaCy, Pydantic, etc.
 hiddenimports = [
@@ -52,7 +72,27 @@ hiddenimports = [
     'presidio_analyzer',
     'presidio_anonymizer',
     'spacy',
+    'spacy.parts_of_speech',
+    'spacy.symbols',
+    'spacy.vocab',
+    'spacy.morphology',
+    'spacy.tokenizer',
+    'spacy.tokens',
+    'spacy.tokens.doc',
+    'spacy.tokens.span',
+    'spacy.tokens.token',
+    'spacy.tokens._serialize',
+    'spacy.matcher',
+    'spacy.matcher.matcher',
+    'spacy.matcher.dependencymatcher',
+    'spacy.matcher.phrasematcher',
     'spacy.pipeline',
+    'spacy.pipeline.attributeruler',
+    'spacy.pipeline.lemmatizer',
+    'spacy.pipeline.morphologizer',
+    'spacy.pipeline.ner',
+    'spacy.pipeline.tagger',
+    'spacy.pipeline.tok2vec',
     'spacy.lang.uk',
     'spacy.lang.en',
     'spacy_curated_transformers',
@@ -67,6 +107,7 @@ hiddenimports = [
     'curated_transformers',
     'curated_tokenizers',
     'uk_core_news_sm',
+    'uk_core_news_lg',
     'uk_core_news_trf',
     'torch',
     'thinc',
@@ -75,14 +116,27 @@ hiddenimports = [
     'regex',
 ]
 
-hiddenimports += collect_submodules('app')
-hiddenimports += collect_submodules('presidio_analyzer')
-hiddenimports += collect_submodules('presidio_anonymizer')
-hiddenimports += collect_submodules('uk_core_news_sm')
-hiddenimports += collect_submodules('uk_core_news_trf')
-hiddenimports += collect_submodules('spacy_curated_transformers')
-hiddenimports += collect_submodules('curated_transformers')
-hiddenimports += collect_submodules('curated_tokenizers')
+for pkg in [
+    'app',
+    'spacy',
+    'thinc',
+    'presidio_analyzer',
+    'presidio_anonymizer',
+    'uk_core_news_sm',
+    'uk_core_news_lg',
+    'uk_core_news_trf',
+    'spacy_curated_transformers',
+    'curated_transformers',
+    'curated_tokenizers',
+    'spacy_legacy',
+    'spacy_loggers',
+    'pymorphy3',
+]:
+    hiddenimports += collect_submodules_fs(pkg)
+    try:
+        hiddenimports += collect_submodules(pkg)
+    except Exception:
+        pass
 
 a = Analysis(
     ['run_server.py'],

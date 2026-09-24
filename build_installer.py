@@ -77,6 +77,7 @@ def main():
         r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
         r"C:\Program Files\Inno Setup 6\ISCC.exe",
         r"C:\Program Files (x86)\Inno Setup 5\ISCC.exe",
+        os.path.expanduser(r"~\AppData\Local\Programs\Inno Setup 6\ISCC.exe"),
     ]
     iscc_bin = None
     for p in iscc_paths:
@@ -87,7 +88,7 @@ def main():
     if iscc_bin:
         print(f"  Found Inno Setup Compiler: {iscc_bin}")
         iss_file = ROOT_DIR / "PIIUA_Setup.iss"
-        run_cmd([f'"{iscc_bin}"', f'"{iss_file}"'])
+        run_cmd(f'"{iscc_bin}" "{iss_file}"')
         print(f"  [SUCCESS] Inno Setup Installer created in: {INSTALLER_DIR}")
     else:
         print("  [NOTE] Inno Setup (ISCC.exe) not found on PATH. Creating Portable Zip Archive...")
