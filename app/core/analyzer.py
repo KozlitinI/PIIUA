@@ -1,3 +1,6 @@
+# Copyright 2026 Ihor Kozlitin
+# SPDX-License-Identifier: Apache-2.0
+
 import logging
 import warnings
 from typing import List, Dict

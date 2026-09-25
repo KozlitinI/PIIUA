@@ -1,3 +1,6 @@
+# Copyright 2026 Ihor Kozlitin
+# SPDX-License-Identifier: Apache-2.0
+
 from typing import Dict, List, Tuple
 from presidio_anonymizer import AnonymizerEngine
 from presidio_analyzer import RecognizerResult

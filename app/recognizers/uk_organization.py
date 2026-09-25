@@ -1,3 +1,6 @@
+# Copyright 2026 Ihor Kozlitin
+# SPDX-License-Identifier: Apache-2.0
+
 import re
 from typing import List, Optional
 from presidio_analyzer import PatternRecognizer, Pattern, RecognizerResult

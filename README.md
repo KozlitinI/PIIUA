@@ -131,17 +131,6 @@ run_app.bat
 
 ---
 
-## 🧪 Запуск модульних тестів
-
-Проект містить набір юніт-тестів для перевірки розпізнавачів та API ендпоінтів:
-
-```bash
-pytest
-```
-*Усі 16 тестів мають проходити зі статусом `PASSED`.*
-
----
-
 ## 📡 REST API Ендпоінти
 
 PIIUA надає REST API для інтеграції з іншими системами:
@@ -158,3 +147,10 @@ PIIUA надає REST API для інтеграції з іншими систе
 ## 📄 Ліцензія
 
 Цей проект поширюється на умовах ліцензії [Apache 2.0](LICENSE).
+
+Copyright 2026 Ihor Kozlitin.
+
+You may use, modify, distribute, and use this software commercially
+in accordance with the terms of the Apache License, Version 2.0.
+
+See the LICENSE and NOTICE files for details.
