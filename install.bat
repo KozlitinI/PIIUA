@@ -1,70 +1,82 @@
 @echo off
-chcp 65001 >nul
-title PIIUA - Автоматичне встановлення
-echo ======================================================================
-echo   PIIUA - Встановлення залежностей та моделей (Open Source)
-echo ======================================================================
-echo.
+title PIIUA - Automatic Setup
 
 cd /d "%~dp0"
 
-:: 1. Перевірка наявності Python у системі
-python --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [ПОМИЛКА] Python не знайдено в системній змінній PATH!
-    echo.
-    echo Інструкція зі встановлення Python:
-    echo 1. Завантажте Python 3.11 або 3.12 з офіційного сайту: https://www.python.org/downloads/
-    echo 2. ПІД ЧАС ВСТАНОВЛЕННЯ обов'язково поставте галочку: "Add python.exe to PATH"
-    echo.
-    echo Або встановіть через консоль Windows (winget):
-    echo    winget install Python.Python.3.11
-    echo.
-    pause
-    exit /b 1
-)
+echo ======================================================================
+echo   PIIUA - Setup Dependencies and Models (Open Source)
+echo ======================================================================
+echo.
 
-echo [1/4] Знайдено Python у системі:
+:: 1. Check Python installation
+python --version >nul 2>&1
+if errorlevel 1 goto ERR_NO_PYTHON
+
+echo [1/4] Found Python in PATH:
 python --version
 echo.
 
-:: 2. Створення віртуального середовища venv
-if not exist "venv" (
-    echo [2/4] Створення віртуального середовища venv...
-    python -m venv venv
-    if %errorlevel% neq 0 (
-        echo [ПОМИЛКА] Не вдалося створити venv. Перевірте інсталяцію Python.
-        pause
-        exit /b 1
-    )
-) else (
-    echo [2/4] Віртуальне середовище venv вже існує.
-)
+:: 2. Create virtual environment
+if exist "venv\Scripts\python.exe" goto VENV_EXISTS
+
+echo [2/4] Creating virtual environment (venv)...
+python -m venv venv
+if errorlevel 1 goto ERR_VENV_FAIL
+goto VENV_DONE
+
+:VENV_EXISTS
+echo [2/4] Virtual environment venv already exists.
+
+:VENV_DONE
 echo.
 
-:: 3. Оновлення pip та встановлення залежностей
-echo [3/4] Встановлення необхідних пакетах та моделей spaCy...
-echo Це може зайняти кілька хвилин (завантаження моделей мови)...
+:: 3. Upgrade pip and install requirements
+echo [3/4] Installing required packages and spaCy models...
+echo This may take a few minutes (downloading language models)...
 echo.
+
 ".\venv\Scripts\python.exe" -m pip install --upgrade pip setuptools wheel
-if %errorlevel% neq 0 (
-    echo [ПОМИЛКА] Не вдалося оновити pip.
-    pause
-    exit /b 1
-)
+if errorlevel 1 goto ERR_PIP_FAIL
 
 ".\venv\Scripts\python.exe" -m pip install -r requirements.txt
-if %errorlevel% neq 0 (
-    echo [ПОМИЛКА] Помилка при встановленні залежностей з requirements.txt.
-    pause
-    exit /b 1
-)
+if errorlevel 1 goto ERR_REQ_FAIL
 
 echo.
 echo ======================================================================
-echo   [УСПІХ] Встановлення PIIUA завершено успішно!
+echo   [SUCCESS] PIIUA installation completed successfully!
 echo ======================================================================
 echo.
-echo Для запуску програми використуйте файл: run_app.bat
+echo To launch the application, run: run_app.bat
 echo.
 pause
+exit /b 0
+
+:ERR_NO_PYTHON
+echo ======================================================================
+echo [ERROR] Python was not found in your system PATH!
+echo.
+echo Installation steps:
+echo 1. Download Python 3.11 or 3.12 from: https://www.python.org/downloads/
+echo 2. Check the box: "Add python.exe to PATH" during installation.
+echo.
+echo Or via Windows console (winget):
+echo    winget install Python.Python.3.11
+echo ======================================================================
+echo.
+pause
+exit /b 1
+
+:ERR_VENV_FAIL
+echo [ERROR] Failed to create virtual environment venv.
+pause
+exit /b 1
+
+:ERR_PIP_FAIL
+echo [ERROR] Failed to upgrade pip.
+pause
+exit /b 1
+
+:ERR_REQ_FAIL
+echo [ERROR] Failed to install packages from requirements.txt.
+pause
+exit /b 1
