@@ -168,7 +168,7 @@ def create_uk_analyzer_engine(model_name: str = "uk_core_news_trf") -> AnalyzerE
             nlp_engine = None
 
     # Register custom Ukrainian recognizers
-    #registry.add_recognizer(UkNameRecognizer())
+    registry.add_recognizer(UkNameRecognizer())
     registry.add_recognizer(UkOrganizationRecognizer())
     registry.add_recognizer(UkRntrcRecognizer())
     registry.add_recognizer(UkPassportRecognizer())

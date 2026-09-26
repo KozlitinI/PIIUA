@@ -136,3 +136,24 @@ def test_uk_person_name_marko_lemmatization():
 
     # The mapping should hold the base nominative form "Марко"
     assert mapping["<PERSON_1>"] == "Марко"
+
+
+def test_uk_name_two_part_false_positives():
+    false_positives = [
+        "Власник компанії",
+        "продажу будівельних",
+        "яка розробляє",
+        "корпоративні вебсистеми",
+    ]
+    for text in false_positives:
+        results = analyze_text(text)
+        person_results = [r for r in results if r.entity_type == "PERSON"]
+        assert len(person_results) == 0, f"False positive detected for '{text}': {person_results}"
+
+    # Verify legitimate two-part names are still recognized
+    valid_names = ["Тарас Шевченко", "Ольга Коваленко"]
+    for text in valid_names:
+        results = analyze_text(text)
+        person_results = [r for r in results if r.entity_type == "PERSON"]
+        assert len(person_results) >= 1, f"Failed to recognize valid name '{text}'"
+
