@@ -890,6 +890,25 @@
             if (!tokenVal.startsWith('<')) tokenVal = '<' + tokenVal;
             if (!tokenVal.endsWith('>')) tokenVal = tokenVal + '>';
 
+            const tbodyCheck = document.getElementById('mappingTableBody');
+            const rowsCheck = tbodyCheck ? tbodyCheck.querySelectorAll('tr') : [];
+            let isDup = false;
+            rowsCheck.forEach(r => {
+                const ti = r.querySelector('.token-input');
+                if (ti) {
+                    const tv = ti.value.trim();
+                    const tov = ti.getAttribute('data-old-val') || '';
+                    if (tv && (tv === tokenVal || tov === tokenVal)) {
+                        isDup = true;
+                    }
+                }
+            });
+
+            if (isDup) {
+                alert(`Помилка: Токен з назвою "${tokenVal}" вже існує у словнику! Назва токена повинна бути унікальною.`);
+                return;
+            }
+
             const pseudoBox = document.getElementById('pseudonymizedBox');
             const llmBox = document.getElementById('llmBox');
 
@@ -968,6 +987,30 @@
                     const vVal = valueInput.value.trim();
 
                     if (oldVal && newVal && oldVal !== newVal) {
+                        // Check if newVal already exists in another row
+                        let isDuplicate = false;
+                        rows.forEach(otherRow => {
+                            if (otherRow !== row) {
+                                const otherTokenInput = otherRow.querySelector('.token-input');
+                                if (otherTokenInput) {
+                                    const otherVal = otherTokenInput.value.trim();
+                                    const otherOldVal = otherTokenInput.getAttribute('data-old-val') || '';
+                                    if (otherVal && (otherVal === newVal || otherOldVal === newVal)) {
+                                        isDuplicate = true;
+                                    }
+                                }
+                            }
+                        });
+
+                        if (isDuplicate) {
+                            alert(`Помилка: Токен з назвою "${newVal}" вже існує у словнику! Назва токена повинна бути унікальною.`);
+                            tokenInput.value = oldVal;
+                            if (oldVal) {
+                                newMapping[oldVal] = vVal;
+                            }
+                            return;
+                        }
+
                         // Replace token in pseudonymized text box
                         if (pseudoText && !pseudoText.includes('Псевдонімізований текст з унікальними')) {
                             pseudoText = pseudoText.split(oldVal).join(newVal);
@@ -987,11 +1030,32 @@
                         }
                         tokenInput.setAttribute('data-old-val', '');
                     } else if (!oldVal && newVal) {
+                        // Check if newVal already exists in another row
+                        let isDuplicate = false;
+                        rows.forEach(otherRow => {
+                            if (otherRow !== row) {
+                                const otherTokenInput = otherRow.querySelector('.token-input');
+                                if (otherTokenInput) {
+                                    const otherVal = otherTokenInput.value.trim();
+                                    const otherOldVal = otherTokenInput.getAttribute('data-old-val') || '';
+                                    if (otherVal && (otherVal === newVal || otherOldVal === newVal)) {
+                                        isDuplicate = true;
+                                    }
+                                }
+                            }
+                        });
+
+                        if (isDuplicate) {
+                            alert(`Помилка: Токен з назвою "${newVal}" вже існує у словнику! Назва токена повинна бути унікальною.`);
+                            tokenInput.value = '';
+                            return;
+                        }
+
                         tokenInput.setAttribute('data-old-val', newVal);
                     }
 
-                    if (newVal) {
-                        newMapping[newVal] = vVal;
+                    if (tokenInput.value.trim()) {
+                        newMapping[tokenInput.value.trim()] = vVal;
                     }
                 }
             });
