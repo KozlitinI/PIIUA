@@ -1,6 +1,7 @@
 # Copyright 2026 Ihor Kozlitin
 # SPDX-License-Identifier: Apache-2.0
 
+import re
 from typing import List, Optional
 from presidio_analyzer import PatternRecognizer, Pattern
 
@@ -24,6 +25,7 @@ class UkNameRecognizer(PatternRecognizer):
     - Коваленко Ольга Іванівна
     - Іваненко І.І.
     - В.О. Петренко
+    - Пожаров С.В.
     """
     PATTERNS = [
         # Full 3-part Ukrainian Name: Capitalized Surname + Capitalized Given Name + Patronymic (-вич, -вна, -івна, -ївна, -евич, -ович)
@@ -32,17 +34,29 @@ class UkNameRecognizer(PatternRecognizer):
             regex=r"\b[А-ЯІЇЄҐ][а-яіїєґ]+(?:\s+[А-ЯІЇЄҐ][а-яіїєґ]+)\s+[А-ЯІЇЄҐ][а-яіїєґ]+(?:вич|вна|івна|ївна|евич|ович)\b",
             score=1.0,
         ),
-        # Surname with Initials: Іваненко І. В. or Іваненко І.В.
+        # Surname with Initials: Іваненко І. В. or Іваненко І.В. or Пожаров С.В.
         Pattern(
             name="uk_name_surname_initials",
-            regex=r"\b[А-ЯІЇЄҐ][а-яіїєґ]+(?:\s+|-)[А-ЯІЇЄҐ]\.\s?[А-ЯІЇЄҐ]\.\b",
+            regex=r"\b[А-ЯІЇЄҐ][а-яіїєґ]+(?:\s+|-)[А-ЯІЇЄҐ]\.\s?[А-ЯІЇЄҐ]\.(?!\w)",
             score=0.92,
         ),
-        # Initials before Surname: І. В. Іваненко or І.В. Іваненко
+        # Initials before Surname: І. В. Іваненко or І.В. Іваненко or С.В. Пожаров
         Pattern(
             name="uk_name_initials_surname",
             regex=r"\b[А-ЯІЇЄҐ]\.\s?[А-ЯІЇЄҐ]\.\s+[А-ЯІЇЄҐ][а-яіїєґ]+\b",
             score=0.92,
+        ),
+        # Surname with single initial: Іваненко І. or Пожаров С.
+        Pattern(
+            name="uk_name_surname_one_initial",
+            regex=r"\b[А-ЯІЇЄҐ][а-яіїєґ]+(?:\s+|-)[А-ЯІЇЄҐ]\.(?!\w)",
+            score=0.85,
+        ),
+        # Single initial before Surname: І. Іваненко or С. Пожаров
+        Pattern(
+            name="uk_name_one_initial_surname",
+            regex=r"\b[А-ЯІЇЄҐ]\.\s+[А-ЯІЇЄҐ][а-яіїєґ]+\b",
+            score=0.85,
         ),
     ]
 
@@ -57,6 +71,7 @@ class UkNameRecognizer(PatternRecognizer):
         patterns: Optional[List[Pattern]] = None,
         context: Optional[List[str]] = None,
         supported_language: str = "uk",
+        global_regex_flags: Optional[int] = re.MULTILINE | re.DOTALL,
     ):
         patterns = patterns if patterns else self.PATTERNS
         context = context if context else self.CONTEXT
@@ -65,6 +80,7 @@ class UkNameRecognizer(PatternRecognizer):
             patterns=patterns,
             context=context,
             supported_language=supported_language,
+            global_regex_flags=global_regex_flags,
         )
 
     def validate_result(self, pattern_text: str) -> Optional[bool]:

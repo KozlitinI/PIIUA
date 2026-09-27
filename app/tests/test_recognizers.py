@@ -157,3 +157,16 @@ def test_uk_name_two_part_false_positives():
         person_results = [r for r in results if r.entity_type == "PERSON"]
         assert len(person_results) >= 1, f"Failed to recognize valid name '{text}'"
 
+
+def test_uk_name_sample_case_sensitivity_and_initials():
+    text = "Сторони медіації Козлітін Ігор Валерійович та Пожаров С.В. погодились розглянути додаткові документи і т.п. та вирішити судьбу автомобіля Москвич СО 2798 НВ."
+    results = analyze_text(text)
+    person_spans = [text[r.start:r.end] for r in results if r.entity_type == "PERSON"]
+    
+    # Must only match exact names, no false positives
+    assert set(person_spans) == {"Козлітін Ігор Валерійович", "Пожаров С.В."}
+    assert "С.В. погодились" not in person_spans
+    assert "т.п. та" not in person_spans
+    assert "судьбу автомобіля Москвич" not in person_spans
+
+

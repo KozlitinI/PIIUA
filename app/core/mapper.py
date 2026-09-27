@@ -72,8 +72,12 @@ def normalize_uk_person_name(raw_name: str) -> str:
             continue
 
         parses = morph.parse(w)
-        # Filter for proper name parse if available to avoid common inanimate nouns (e.g. марка -> stamp)
-        name_parse = next((item for item in parses if 'Name' in item.tag), None)
+        # Filter for proper name/surname/patronymic parse in nominative case first
+        name_parse = next((item for item in parses if ('Surn' in item.tag or 'Name' in item.tag or 'Patr' in item.tag) and 'nomn' in item.tag), None)
+        if not name_parse:
+            name_parse = next((item for item in parses if 'Surn' in item.tag or 'Name' in item.tag or 'Patr' in item.tag), None)
+        if not name_parse:
+            name_parse = next((item for item in parses if 'nomn' in item.tag), None)
         lemma = name_parse.normal_form if name_parse else (parses[0].normal_form if parses else w)
         norm_words.append(lemma.capitalize())
 
