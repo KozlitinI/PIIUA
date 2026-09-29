@@ -1,11 +1,13 @@
 # Copyright 2026 Ihor Kozlitin
 # SPDX-License-Identifier: Apache-2.0
 
+import io
 from pathlib import Path
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from pypdf import PdfReader
 
 from app.schemas.api import (
     AnalyzeRequest,
@@ -14,6 +16,7 @@ from app.schemas.api import (
     PseudonymizeResponse,
     RestoreRequest,
     RestoreResponse,
+    ExtractPDFResponse,
     DetectedEntity,
 )
 from app.core.analyzer import analyze_text
@@ -116,3 +119,49 @@ async def restore_pii(request: RestoreRequest):
         return RestoreResponse(restored_text=restored)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/v1/extract-pdf", response_model=ExtractPDFResponse)
+async def extract_pdf_text(file: UploadFile = File(...)):
+    """
+    Extract text from an uploaded PDF document.
+    """
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Обраний файл не є PDF-документом.")
+    
+    try:
+        content = await file.read()
+        if not content:
+            raise HTTPException(status_code=400, detail="Файл порожній.")
+            
+        reader = PdfReader(io.BytesIO(content))
+        
+        if reader.is_encrypted:
+            try:
+                reader.decrypt("")
+            except Exception:
+                raise HTTPException(status_code=400, detail="PDF-файл захищений паролем.")
+        
+        extracted_pages = []
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text and page_text.strip():
+                extracted_pages.append(page_text.strip())
+        
+        full_text = "\n\n".join(extracted_pages)
+        if not full_text:
+            raise HTTPException(
+                status_code=400,
+                detail="Не вдалося витягти текст з PDF. Можливо, файл містить лише скановані зображення без текстового шару."
+            )
+        
+        return ExtractPDFResponse(
+            filename=file.filename,
+            text=full_text,
+            page_count=len(reader.pages)
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Помилка при зчитуванні PDF-файлу: {str(e)}")
+

@@ -512,7 +512,14 @@
                     <div class="card-title">
                         <span>📄 1. Позиція сторони / Документ</span>
                     </div>
+                    <div class="card-actions">
+                        <button type="button" class="btn btn-secondary btn-sample" onclick="triggerPdfUpload()" id="btnUploadPdf" title="Вибрати PDF-файл для завантаження тексту">
+                            📂 Завантажити з PDF
+                        </button>
+                        <input type="file" id="pdfFileInput" accept=".pdf,application/pdf" style="display: none;" onchange="handlePdfUpload(event)">
+                    </div>
                 </div>
+                <div id="pdfStatusMsg" style="display: none; padding: 0.4rem 0.6rem; margin-bottom: 0.5rem; background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 0.5rem; color: var(--accent-emerald); font-size: 0.8rem; font-weight: 500;"></div>
                 <textarea id="inputText" placeholder="Введіть або вставте текст позиції сторони, позовної заяви чи медіаційного листування..."></textarea>
                 <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
                     <div style="display: flex; flex-direction: column; gap: 0.25rem;">
@@ -667,6 +674,66 @@
 
     <script>
         let currentMapping = {};
+
+        function triggerPdfUpload() {
+            document.getElementById('pdfFileInput').click();
+        }
+
+        async function handlePdfUpload(event) {
+            const fileInput = event.target;
+            if (!fileInput.files || fileInput.files.length === 0) return;
+
+            const file = fileInput.files[0];
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                alert('Будь ласка, оберіть файл у форматі PDF.');
+                fileInput.value = '';
+                return;
+            }
+
+            const btnUpload = document.getElementById('btnUploadPdf');
+            const originalBtnHtml = btnUpload ? btnUpload.innerHTML : '';
+            if (btnUpload) {
+                btnUpload.disabled = true;
+                btnUpload.innerHTML = '⏳ Зчитування...';
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/api/v1/extract-pdf', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Помилка при зчитуванні PDF');
+                }
+
+                const inputTextArea = document.getElementById('inputText');
+                inputTextArea.value = data.text;
+                inputTextArea.dispatchEvent(new Event('input', { bubbles: true }));
+
+                const statusMsg = document.getElementById('pdfStatusMsg');
+                if (statusMsg) {
+                    statusMsg.style.display = 'block';
+                    statusMsg.textContent = `✓ Завантажено "${escapeHtml(data.filename)}" (${data.page_count} стор.)`;
+                    setTimeout(() => {
+                        statusMsg.style.display = 'none';
+                    }, 5000);
+                }
+            } catch (err) {
+                alert('Помилка під час зчитування PDF: ' + err.message);
+            } finally {
+                if (btnUpload) {
+                    btnUpload.disabled = false;
+                    btnUpload.innerHTML = originalBtnHtml;
+                }
+                fileInput.value = '';
+            }
+        }
 
         async function runPseudonymization() {
             const text = document.getElementById('inputText').value;

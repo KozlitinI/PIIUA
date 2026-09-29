@@ -114,6 +114,9 @@ hiddenimports = [
     'pymorphy3',
     'phonenumbers',
     'regex',
+    'pypdf',
+    'multipart',
+    'python_multipart',
 ]
 
 for pkg in [
@@ -131,6 +134,9 @@ for pkg in [
     'spacy_legacy',
     'spacy_loggers',
     'pymorphy3',
+    'pypdf',
+    'multipart',
+    'python_multipart',
 ]:
     hiddenimports += collect_submodules_fs(pkg)
     try:
