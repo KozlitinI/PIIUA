@@ -51,6 +51,8 @@ from presidio_analyzer import (
 from presidio_analyzer.nlp_engine import SpacyNlpEngine
 
 from app.recognizers.uk_rntrc import UkRntrcRecognizer
+from app.recognizers.uk_edrpou import UkEdrpouRecognizer
+from app.recognizers.uk_mfo import UkMfoRecognizer
 from app.recognizers.uk_passport import UkPassportRecognizer
 from app.recognizers.uk_iban import UkIbanRecognizer
 from app.recognizers.uk_phone import UkPhoneRecognizer
@@ -58,7 +60,7 @@ from app.recognizers.uk_case_number import UkCaseNumberRecognizer
 from app.recognizers.uk_address import UkAddressRecognizer
 from app.recognizers.uk_vehicle import UkVehicleRecognizer
 from app.recognizers.uk_names import UkNameRecognizer
-from app.recognizers.uk_organization import UkOrganizationRecognizer
+from app.recognizers.uk_organization import UkOrganizationRecognizer, EXCLUDED_CONTRACT_TERMS
 
 logger = logging.getLogger("piiua.analyzer")
 
@@ -171,6 +173,8 @@ def create_uk_analyzer_engine(model_name: str = "uk_core_news_trf") -> AnalyzerE
     registry.add_recognizer(UkNameRecognizer())
     registry.add_recognizer(UkOrganizationRecognizer())
     registry.add_recognizer(UkRntrcRecognizer())
+    registry.add_recognizer(UkEdrpouRecognizer())
+    registry.add_recognizer(UkMfoRecognizer())
     registry.add_recognizer(UkPassportRecognizer())
     registry.add_recognizer(UkIbanRecognizer())
     registry.add_recognizer(UkPhoneRecognizer())
@@ -216,4 +220,10 @@ def analyze_text(
         score_threshold=score_threshold,
         return_decision_process=False,
     )
-    return results
+
+    filtered_results = [
+        r for r in results
+        if text[r.start:r.end].strip(" \"«'“»'”.,:;()[]{}").strip().lower() not in EXCLUDED_CONTRACT_TERMS
+    ]
+
+    return filtered_results

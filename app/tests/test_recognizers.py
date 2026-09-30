@@ -170,3 +170,56 @@ def test_uk_name_sample_case_sensitivity_and_initials():
     assert "судьбу автомобіля Москвич" not in person_spans
 
 
+def test_uk_edrpou_mfo_and_ipn_recognition():
+    text = (
+        "Код ЄДРПОУ 35877574, "
+        "МФО 300614, "
+        "ІПН 358775726562, "
+        "РНОКПП 3123456789."
+    )
+    pseudo_text, mapping, entities = process_pseudonymization(text)
+
+    # Check mapping values
+    values = set(mapping.values())
+    assert "35877574" in values
+    assert "300614" in values
+    assert "358775726562" in values
+    assert "3123456789" in values
+
+    # Check tags in pseudonymized text
+    assert "<EDRPOU_1>" in pseudo_text
+    assert "<MFO_1>" in pseudo_text
+    assert "<RNTRC_1>" in pseudo_text
+    assert "<RNTRC_2>" in pseudo_text
+
+
+def test_uk_complex_address_recognition():
+    addr1 = "вул. Університетська, будинок № 13-А, м. Київ, 03110"
+    addr2 = "вул. Північно-Сирецька, будинок № 1-3, м. Київ, 04136"
+
+    pseudo1, mapping1, _ = process_pseudonymization(f"Адреса: {addr1}")
+    assert "<ADDRESS_1>" in pseudo1
+    assert mapping1["<ADDRESS_1>"] == addr1
+
+    pseudo2, mapping2, _ = process_pseudonymization(f"Адреса: {addr2}")
+    assert "<ADDRESS_1>" in pseudo2
+    assert mapping2["<ADDRESS_1>"] == addr2
+
+
+def test_uk_inflected_pib_recognition():
+    t1 = "в особі Заступника Директора Брасло Олени Миколаївни, яка діє на підставі Довіреності"
+    pseudo1, mapping1, entities1 = process_pseudonymization(t1)
+    pib1_entities = [e for e in entities1 if e.entity_type == "PERSON"]
+    assert len(pib1_entities) == 1
+    assert pib1_entities[0].text == "Брасло Олени Миколаївни"
+
+    t2 = "в особі Директора Агєєва Максима Юрійовича, який діє на підставі Статуту"
+    pseudo2, mapping2, entities2 = process_pseudonymization(t2)
+    pib2_entities = [e for e in entities2 if e.entity_type == "PERSON"]
+    assert len(pib2_entities) == 1
+    assert pib2_entities[0].text == "Агєєва Максима Юрійовича"
+
+
+
+
+

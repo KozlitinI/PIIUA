@@ -74,3 +74,29 @@ def test_pseudonymize_propagated_organization_with_context():
     assert "<ORG_1>" in data["pseudonymized_text"]
     assert "РЕАРДЕН ГРУП" not in data["pseudonymized_text"]
 
+
+def test_excluded_contract_terms_not_pseudonymized():
+    contract_text = (
+        "Постачальник та Покупець уклали цей Договір про наступне в особі Заступника Директора та Директора. "
+        "Сторони погодили, що Заступник Директора, Головний Бухгалтер та Бухгалтер передають Акт приймання-передачі Програмного комплексу. "
+        "Примірник Програмного комплексу є предметом Договору."
+    )
+    payload = {
+        "text": contract_text,
+        "score_threshold": 0.4
+    }
+    response = client.post("/api/v1/pseudonymize", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    mapping = data["mapping"]
+    
+    excluded_list = [
+        "Постачальник", "Покупець", "Сторони", "Сторона",
+        "Договір", "Акт", "Програмний комплекс", "Програмного комплексу",
+        "Заступника Директора", "Заступник Директора", "Директора", "Директор",
+        "Головний Бухгалтер", "Бухгалтер"
+    ]
+    for word in excluded_list:
+        assert word not in mapping.values(), f"Contract term/title '{word}' should not be in mapping dictionary"
+
+

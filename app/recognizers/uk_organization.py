@@ -31,10 +31,42 @@ def validate_edrpou_checksum(edrpou_str: str) -> bool:
         total = sum(digits[i] * w2[i] for i in range(7))
         remainder = total % 11
 
-    if remainder < 10:
-        return digits[7] == remainder
-    else:
-        return digits[7] == 0
+EXCLUDED_CONTRACT_TERMS = {
+    # Contract roles & job titles (Постачальник, Покупець, Директор, Бухгалтер, etc.)
+    "постачальник", "постачальника", "постачальнику", "постачальником", "постачальниці", "постачальницею", "постачальники", "постачальників",
+    "покупець", "покупця", "покупцеві", "покупцю", "покупцем", "покупці", "покупців",
+    "замовник", "замовника", "замовникові", "замовником", "замовники", "замовників",
+    "виконавець", "виконавця", "виконавцеві", "виконавцем", "виконавці", "виконавців",
+    "продавець", "продавця", "продавцеві", "продавцем", "продавці", "продавців",
+    "орендодавець", "орендодавця", "орендар", "орендаря",
+    "позивач", "позивача", "відповідач", "відповідача",
+    "підписант", "підписанта", "заявник", "заявника", "скаржник",
+
+    # Corporate job positions
+    "директор", "директора", "директору", "директором", "директорові", "директори", "директорів",
+    "заступник директора", "заступника директора", "заступнику директора", "заступником директора", "заступникові директора",
+    "генеральний директор", "генерального директора", "генеральному директору", "генеральним директором",
+    "виконавчий директор", "виконавчого директора", "виконавчому директору", "виконавчим директором",
+    "бухгалтер", "бухгалтера", "бухгалтеру", "бухгалтером", "бухгалтери", "бухгалтерів",
+    "головний бухгалтер", "головного бухгалтера", "головному бухгалтеру", "головним бухгалтером", "головной бухгалтер",
+    "керівник", "керівника", "керівникові", "керівником", "менеджер", "менеджера",
+    "юрист", "юрисконсульт", "представник", "представника", "адвокат", "адвоката",
+
+    # Parties
+    "сторона", "сторони", "сторін", "сторону", "сторонам", "сторонами", "стороні",
+
+    # Contract document terms
+    "договір", "договору", "договором", "договорі", "договори", "договорів", "договорам", "договорами",
+    "акт", "акту", "актом", "акті", "акти", "актів", "актам", "актами",
+    "заявка", "заявки", "заявку", "заявкам", "заявками",
+    "додаток", "додатка", "додатку", "додатки", "додатків",
+    "специфікація", "специфікації", "специфікацію",
+
+    # Product / Subject matter terms
+    "програмний комплекс", "програмного комплексу", "програмному комплексу", "програмним комплексом", "програмному комплексі", "програмні комплекси", "програмних комплексів",
+    "програмна продукція", "програмної продукції", "програмну продукцію",
+    "ітс",
+}
 
 
 class UkOrganizationRecognizer(PatternRecognizer):
@@ -73,12 +105,6 @@ class UkOrganizationRecognizer(PatternRecognizer):
             regex=r"\b(?:ТОВ|ТзОВ|ПП|ПрАТ|ПАТ|АТ|ДП|ГО|КП)\s+[А-ЯІЇЄҐ][а-яіїєґ0-9A-Z]+(?:\s+[А-ЯІЇЄҐ0-9A-Z][а-яіїєґ0-9A-Z]+)?\b",
             score=0.85,
         ),
-        # 8-digit EDRPOU code with context
-        Pattern(
-            name="uk_edrpou_code",
-            regex=r"\b\d{8}\b",
-            score=0.5,
-        ),
     ]
 
     CONTEXT = [
@@ -104,8 +130,12 @@ class UkOrganizationRecognizer(PatternRecognizer):
     def validate_result(self, pattern_text: str) -> Optional[bool]:
         """
         If match is a pure 8-digit code, validate EDRPOU checksum algorithm.
+        If match is a standard contract role or term, reject it.
         """
-        clean_text = pattern_text.strip()
+        clean_text = pattern_text.strip(" \"«'“»'”.,:;()[]{}").strip()
+        if clean_text.lower() in EXCLUDED_CONTRACT_TERMS:
+            return False
+
         if len(clean_text) == 8 and clean_text.isdigit():
             if validate_edrpou_checksum(clean_text):
                 return True
@@ -123,6 +153,14 @@ class UkOrganizationRecognizer(PatternRecognizer):
         if not results:
             return []
 
+        # Filter out any results that match excluded contract terms
+        filtered_results = []
+        for r in results:
+            matched = text[r.start:r.end].strip(" \"«'“»'”.,:;()[]{}").strip().lower()
+            if matched not in EXCLUDED_CONTRACT_TERMS:
+                filtered_results.append(r)
+        results = filtered_results
+
         # Extract core organization names from detected spans
         known_org_names = set()
         for r in results:
@@ -134,8 +172,8 @@ class UkOrganizationRecognizer(PatternRecognizer):
                 span_text,
                 flags=re.IGNORECASE
             )
-            cleaned = cleaned.strip(" \"«'“»'”")
-            if len(cleaned) >= 3 and not cleaned.isdigit():
+            cleaned = cleaned.strip(" \"«'“»'”.,:;()[]{}").strip()
+            if cleaned.lower() not in EXCLUDED_CONTRACT_TERMS and len(cleaned) >= 3 and not cleaned.isdigit():
                 known_org_names.add(cleaned)
 
         # Propagate known organization names throughout the document

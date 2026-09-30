@@ -28,11 +28,23 @@ class UkNameRecognizer(PatternRecognizer):
     - Пожаров С.В.
     """
     PATTERNS = [
-        # Full 3-part Ukrainian Name: Capitalized Surname + Capitalized Given Name + Patronymic (-вич, -вна, -івна, -ївна, -евич, -ович)
+        # Full 3-part Ukrainian Name: Surname + Name + Patronymic (e.g., Брасло Олени Миколаївни, Агєєва Максима Юрійовича)
         Pattern(
-            name="uk_name_full_pib",
-            regex=r"\b[А-ЯІЇЄҐ][а-яіїєґ]+(?:\s+[А-ЯІЇЄҐ][а-яіїєґ]+)\s+[А-ЯІЇЄҐ][а-яіїєґ]+(?:вич|вна|івна|ївна|евич|ович)\b",
+            name="uk_name_full_pib_surname_first",
+            regex=r"\b[А-ЯІЇЄҐ][а-яіїєґ]+(?:-[А-ЯІЇЄҐ][а-яіїєґ]+)?\s+[А-ЯІЇЄҐ][а-яіїєґ]+\s+[А-ЯІЇЄҐ][а-яіїєґ]+(?:[оеє]?вич[аеміу]?|[оеє]?вичеві|[вії]?вн[аиіу]|[вії]?вною|[ії]чн[ау]|[ії]чної|[ії]чній|[ії]чною|ич[аему]?)\b",
             score=1.0,
+        ),
+        # Full 3-part Ukrainian Name: Name + Patronymic + Surname
+        Pattern(
+            name="uk_name_full_pib_name_first",
+            regex=r"\b[А-ЯІЇЄҐ][а-яіїєґ]+\s+[А-ЯІЇЄҐ][а-яіїєґ]+(?:[оеє]?вич[аеміу]?|[оеє]?вичеві|[вії]?вн[аиіу]|[вії]?вною|[ії]чн[ау]|[ії]чної|[ії]чній|[ії]чною|ич[аему]?)\s+[А-ЯІЇЄҐ][а-яіїєґ]+(?:-[А-ЯІЇЄҐ][а-яіїєґ]+)?\b",
+            score=1.0,
+        ),
+        # 2-part Name + Patronymic (e.g. Олени Миколаївни, Максима Юрійовича)
+        Pattern(
+            name="uk_name_two_part_patronymic",
+            regex=r"\b[А-ЯІЇЄҐ][а-яіїєґ]+\s+[А-ЯІЇЄҐ][а-яіїєґ]+(?:[оеє]?вич[аеміу]?|[оеє]?вичеві|[вії]?вн[аиіу]|[вії]?вною|[ії]чн[ау]|[ії]чної|[ії]чній|[ії]чною|ич[аему]?)\b",
+            score=0.95,
         ),
         # Surname with Initials: Іваненко І. В. or Іваненко І.В. or Пожаров С.В.
         Pattern(

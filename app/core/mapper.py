@@ -89,6 +89,8 @@ ENTITY_TAG_PREFIXES = {
     "ORGANIZATION": "ORG",
     "ORG": "ORG",
     "UK_RNTRC": "RNTRC",
+    "UK_EDRPOU": "EDRPOU",
+    "UK_MFO": "MFO",
     "UK_PASSPORT": "PASSPORT",
     "UK_IBAN": "IBAN",
     "UK_PHONE": "PHONE",
