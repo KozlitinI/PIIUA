@@ -3,7 +3,7 @@
 
 import re
 from typing import List, Optional
-from presidio_analyzer import PatternRecognizer, Pattern, RecognizerResult
+from presidio_analyzer import PatternRecognizer, Pattern, RecognizerResult, AnalysisExplanation
 from presidio_analyzer.nlp_engine import NlpArtifacts
 
 
@@ -127,8 +127,13 @@ class UkOrganizationRecognizer(PatternRecognizer):
         known_org_names = set()
         for r in results:
             span_text = text[r.start:r.end].strip()
-            # Clean prefixes (ТОВ, ПрАТ, etc.) and quotation marks
-            cleaned = re.sub(r"^(?:ТОВ|ТзОВ|ПП|ПрАТ|ПАТ|АТ|ДП|ГО|КП|ОСББ|БФ)\s*", "", span_text)
+            # Clean prefixes (both long forms and abbreviations) and quotation marks
+            cleaned = re.sub(
+                r"^(?:Товариство з обмеженою відповідальністю|Приватне акціонерне товариство|Публічне акціонерне товариство|Акціонерне товариство|Приватне підприємство|Громадська організація|Благодійний фонд|Державне підприємство|ТОВ|ТзОВ|ПП|ПрАТ|ПАТ|АТ|ДП|ГО|КП|ОСББ|БФ)\s*",
+                "",
+                span_text,
+                flags=re.IGNORECASE
+            )
             cleaned = cleaned.strip(" \"«'“»'”")
             if len(cleaned) >= 3 and not cleaned.isdigit():
                 known_org_names.add(cleaned)
@@ -150,6 +155,11 @@ class UkOrganizationRecognizer(PatternRecognizer):
                         start=start,
                         end=end,
                         score=0.92,
+                        analysis_explanation=AnalysisExplanation(
+                            recognizer=self.name,
+                            original_score=0.92,
+                            pattern_name="uk_org_propagated",
+                        ),
                     )
                     additional_results.append(res)
                     existing_spans.append((start, end))

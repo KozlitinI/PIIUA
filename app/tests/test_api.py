@@ -57,3 +57,20 @@ def test_restore_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert data["restored_text"] == "Згідно з позицією Коваленко Олександр Сергійович, борг виплачено на UA123456789012345678901234567."
+
+
+def test_pseudonymize_propagated_organization_with_context():
+    payload = {
+        "text": (
+            "ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ «РЕАРДЕН ГРУП» уклало договір. "
+            "Компанія РЕАРДЕН ГРУП зобов'язується виконувати умови. "
+            "Реквізити РЕАРДЕН ГРУП: м. Київ."
+        ),
+        "score_threshold": 0.4
+    }
+    response = client.post("/api/v1/pseudonymize", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert "<ORG_1>" in data["pseudonymized_text"]
+    assert "РЕАРДЕН ГРУП" not in data["pseudonymized_text"]
+
