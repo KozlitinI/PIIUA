@@ -49,3 +49,9 @@ class ExtractPDFResponse(BaseModel):
     text: str = Field(..., description="Extracted text from the PDF file")
     page_count: int = Field(..., description="Total number of pages in the PDF")
 
+
+class ExtractWordResponse(BaseModel):
+    filename: str = Field(..., description="Name of the processed Word file")
+    text: str = Field(..., description="Extracted text from the Word file")
+
+

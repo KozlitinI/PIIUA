@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pypdf import PdfReader
+from docx import Document
 
 from app.schemas.api import (
     AnalyzeRequest,
@@ -17,6 +18,7 @@ from app.schemas.api import (
     RestoreRequest,
     RestoreResponse,
     ExtractPDFResponse,
+    ExtractWordResponse,
     DetectedEntity,
 )
 from app.core.analyzer import analyze_text
@@ -164,4 +166,83 @@ async def extract_pdf_text(file: UploadFile = File(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Помилка при зчитуванні PDF-файлу: {str(e)}")
+
+
+@app.post("/api/v1/extract-word", response_model=ExtractWordResponse)
+async def extract_word_text(file: UploadFile = File(...)):
+    """
+    Extract text from an uploaded Word document (.docx / .doc).
+    """
+    filename_lower = file.filename.lower()
+    if not (filename_lower.endswith('.docx') or filename_lower.endswith('.doc')):
+        raise HTTPException(status_code=400, detail="Обраний файл не є Word-документом (.docx, .doc).")
+    
+    try:
+        content = await file.read()
+        if not content:
+            raise HTTPException(status_code=400, detail="Файл порожній.")
+        
+        full_text = ""
+        if filename_lower.endswith('.docx'):
+            try:
+                doc = Document(io.BytesIO(content))
+                paragraphs = []
+                for p in doc.paragraphs:
+                    if p.text and p.text.strip():
+                        paragraphs.append(p.text.strip())
+                
+                if doc.tables:
+                    for table in doc.tables:
+                        for row in table.rows:
+                            row_text = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                            if row_text:
+                                paragraphs.append(" | ".join(row_text))
+                
+                full_text = "\n\n".join(paragraphs)
+            except Exception as e:
+                try:
+                    import zipfile
+                    import xml.etree.ElementTree as ET
+                    with zipfile.ZipFile(io.BytesIO(content)) as z:
+                        xml_content = z.read('word/document.xml')
+                        tree = ET.fromstring(xml_content)
+                        paragraphs = []
+                        for p in tree.iter('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p'):
+                            texts = [node.text for node in p.iter('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t') if node.text]
+                            if texts:
+                                paragraphs.append("".join(texts).strip())
+                        full_text = "\n\n".join([p for p in paragraphs if p])
+                except Exception:
+                    raise HTTPException(status_code=400, detail=f"Не вдалося зчитати DOCX файл: {str(e)}")
+        else:
+            try:
+                import re
+                raw_text = content.decode('utf-16le', errors='ignore')
+                cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]', '', raw_text)
+                lines = [line.strip() for line in cleaned.splitlines() if len(line.strip()) > 3]
+                if lines:
+                    full_text = "\n\n".join(lines)
+                else:
+                    raise ValueError("Empty content")
+            except Exception:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Файл у застарілому форматі .DOC не вдалося зчитати. Будь ласка, збережіть документ у форматі .DOCX та повторіть спробу."
+                )
+
+        if not full_text or not full_text.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="Не вдалося витягти текст з Word-документа. Можливо, файл порожній або захищений."
+            )
+
+        return ExtractWordResponse(
+            filename=file.filename,
+            text=full_text
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Помилка при зчитуванні Word-файлу: {str(e)}")
+
 

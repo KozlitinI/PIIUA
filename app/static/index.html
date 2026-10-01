@@ -517,6 +517,10 @@
                             📂 Завантажити з PDF
                         </button>
                         <input type="file" id="pdfFileInput" accept=".pdf,application/pdf" style="display: none;" onchange="handlePdfUpload(event)">
+                        <button type="button" class="btn btn-secondary btn-sample" onclick="triggerWordUpload()" id="btnUploadWord" title="Вибрати WORD-файл для завантаження тексту">
+                            📂 Завантажити з WORD
+                        </button>
+                        <input type="file" id="wordFileInput" accept=".docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword" style="display: none;" onchange="handleWordUpload(event)">
                     </div>
                 </div>
                 <div id="pdfStatusMsg" style="display: none; padding: 0.4rem 0.6rem; margin-bottom: 0.5rem; background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 0.5rem; color: var(--accent-emerald); font-size: 0.8rem; font-weight: 500;"></div>
@@ -726,6 +730,67 @@
                 }
             } catch (err) {
                 alert('Помилка під час зчитування PDF: ' + err.message);
+            } finally {
+                if (btnUpload) {
+                    btnUpload.disabled = false;
+                    btnUpload.innerHTML = originalBtnHtml;
+                }
+                fileInput.value = '';
+            }
+        }
+
+        function triggerWordUpload() {
+            document.getElementById('wordFileInput').click();
+        }
+
+        async function handleWordUpload(event) {
+            const fileInput = event.target;
+            if (!fileInput.files || fileInput.files.length === 0) return;
+
+            const file = fileInput.files[0];
+            const fileNameLower = file.name.toLowerCase();
+            if (!fileNameLower.endsWith('.docx') && !fileNameLower.endsWith('.doc')) {
+                alert('Будь ласка, оберіть файл у форматі WORD (.docx, .doc).');
+                fileInput.value = '';
+                return;
+            }
+
+            const btnUpload = document.getElementById('btnUploadWord');
+            const originalBtnHtml = btnUpload ? btnUpload.innerHTML : '';
+            if (btnUpload) {
+                btnUpload.disabled = true;
+                btnUpload.innerHTML = '⏳ Зчитування...';
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/api/v1/extract-word', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Помилка при зчитуванні WORD-файлу');
+                }
+
+                const inputTextArea = document.getElementById('inputText');
+                inputTextArea.value = data.text;
+                inputTextArea.dispatchEvent(new Event('input', { bubbles: true }));
+
+                const statusMsg = document.getElementById('pdfStatusMsg');
+                if (statusMsg) {
+                    statusMsg.style.display = 'block';
+                    statusMsg.textContent = `✓ Завантажено "${escapeHtml(data.filename)}"`;
+                    setTimeout(() => {
+                        statusMsg.style.display = 'none';
+                    }, 5000);
+                }
+            } catch (err) {
+                alert('Помилка під час зчитування WORD-файлу: ' + err.message);
             } finally {
                 if (btnUpload) {
                     btnUpload.disabled = false;

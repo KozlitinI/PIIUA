@@ -115,6 +115,7 @@ hiddenimports = [
     'phonenumbers',
     'regex',
     'pypdf',
+    'docx',
     'multipart',
     'python_multipart',
 ]
@@ -135,6 +136,7 @@ for pkg in [
     'spacy_loggers',
     'pymorphy3',
     'pypdf',
+    'docx',
     'multipart',
     'python_multipart',
 ]:

@@ -2,3 +2,7 @@ PIIUA.zip
 dist/
 dist_installer/
 build/
+venv/
+.venv/
+__pycache__/
+*.py[cod]

@@ -1,8 +1,11 @@
+# Copyright 2026 Ihor Kozlitin
+# SPDX-License-Identifier: Apache-2.0
+
 import sys
 import os
 import warnings
 
-# Suppress PyTorch / Python 3.14 FutureWarnings on import
+# Suppress PyTorch / Python 3.13 FutureWarnings on import
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", message=".*torch.jit.script.*")
 warnings.filterwarnings("ignore", category=UserWarning)
