@@ -219,6 +219,33 @@ def test_uk_inflected_pib_recognition():
     assert len(pib2_entities) == 1
     assert pib2_entities[0].text == "Агєєва Максима Юрійовича"
 
+    t3 = "в особі Виконавчого директора Карпенка Сергія Ілліча, який діє на підставі Статуту"
+    pseudo3, mapping3, entities3 = process_pseudonymization(t3)
+    pib3_entities = [e for e in entities3 if e.entity_type == "PERSON"]
+    org3_entities = [e for e in entities3 if e.entity_type == "ORGANIZATION"]
+    assert len(pib3_entities) == 1
+    assert pib3_entities[0].text == "Карпенка Сергія Ілліча"
+    assert len(org3_entities) == 0
+    assert "Виконавчого директора" in pseudo3
+    assert "<PERSON_1>" in pseudo3
+
+
+def test_pdf_preamble_executive_director_recognition():
+    text = (
+        "ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ «ДЕ НОВО» (м. Київ), "
+        "іменоване надалі «Покупець», що є платником податку на прибуток на загальних умовах, "
+        "в особі Виконавчого директора Карпенка Сергія Ілліча, який діє на підставі Статуту, з іншої сторони,"
+    )
+    results = analyze_text(text)
+    org_texts = [text[r.start:r.end] for r in results if r.entity_type == "ORGANIZATION"]
+    person_texts = [text[r.start:r.end] for r in results if r.entity_type == "PERSON"]
+
+    assert "ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ «ДЕ НОВО»" in org_texts
+    assert "Карпенка Сергія Ілліча" in person_texts
+    assert "Виконавчого директора Карпенка" not in org_texts
+    assert "Виконавчого директора" not in org_texts
+
+
 
 
 

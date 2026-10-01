@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import re
 import warnings
 from typing import List, Dict
 
@@ -221,9 +222,37 @@ def analyze_text(
         return_decision_process=False,
     )
 
-    filtered_results = [
-        r for r in results
-        if text[r.start:r.end].strip(" \"«'“»'”.,:;()[]{}").strip().lower() not in EXCLUDED_CONTRACT_TERMS
-    ]
+    # 1. Clean/trim ORGANIZATION results starting with job titles / contract terms
+    sorted_terms = sorted(EXCLUDED_CONTRACT_TERMS, key=len, reverse=True)
+    excluded_pattern = re.compile(rf'^(?:{"|".join(re.escape(t) for t in sorted_terms)})\b\s*', re.IGNORECASE)
 
-    return filtered_results
+    cleaned_results = []
+    for r in results:
+        s, e = r.start, r.end
+        val = text[s:e]
+        clean_val = val.strip(" \"«'“»'”.,:;()[]{}").strip().lower()
+        if r.entity_type == "ORGANIZATION":
+            m = excluded_pattern.match(val)
+            if m:
+                s += m.end()
+                val = text[s:e]
+                clean_val = val.strip(" \"«'“»'”.,:;()[]{}").strip().lower()
+            if not clean_val or clean_val in EXCLUDED_CONTRACT_TERMS or clean_val.isdigit():
+                continue
+        else:
+            if not clean_val or clean_val in EXCLUDED_CONTRACT_TERMS:
+                continue
+        r.start, r.end = s, e
+        cleaned_results.append(r)
+
+    # 2. Overlap resolution: PERSON entities take precedence over overlapping ORGANIZATION entities
+    person_spans = [(r.start, r.end) for r in cleaned_results if r.entity_type == "PERSON"]
+    final_results = []
+    for r in cleaned_results:
+        if r.entity_type == "ORGANIZATION":
+            overlap = any(not (r.end <= ps or r.start >= pe) for ps, pe in person_spans)
+            if overlap:
+                continue
+        final_results.append(r)
+
+    return final_results
