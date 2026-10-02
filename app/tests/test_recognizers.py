@@ -269,6 +269,16 @@ def test_pdf_preamble_executive_director_recognition():
     assert "Виконавчого директора" not in org_texts
 
 
+def test_organization_recognition_latin_i_homoglyphs():
+    # Text containing Latin 'I' in "ВIДПОВIДАЛЬНIСТЮ"
+    text = "ТОВАРИСТВО З ОБМЕЖЕНОЮ ВIДПОВIДАЛЬНIСТЮ «КМ ДІСТІ» (м. Київ), іменоване надалі «Замовник»"
+    results = analyze_text(text)
+    org_texts = [text[r.start:r.end] for r in results if r.entity_type == "ORGANIZATION"]
+
+    assert "ТОВАРИСТВО З ОБМЕЖЕНОЮ ВIДПОВIДАЛЬНIСТЮ «КМ ДІСТІ»" in org_texts
+
+
+
 
 
 
