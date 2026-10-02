@@ -62,6 +62,7 @@ from app.recognizers.uk_address import UkAddressRecognizer
 from app.recognizers.uk_vehicle import UkVehicleRecognizer
 from app.recognizers.uk_names import UkNameRecognizer
 from app.recognizers.uk_organization import UkOrganizationRecognizer, EXCLUDED_CONTRACT_TERMS
+from app.recognizers.uk_url import UkUrlRecognizer
 
 logger = logging.getLogger("piiua.analyzer")
 
@@ -182,6 +183,7 @@ def create_uk_analyzer_engine(model_name: str = "uk_core_news_trf") -> AnalyzerE
     registry.add_recognizer(UkCaseNumberRecognizer())
     registry.add_recognizer(UkAddressRecognizer())
     registry.add_recognizer(UkVehicleRecognizer())
+    registry.add_recognizer(UkUrlRecognizer())
     registry.add_recognizer(UK_EMAIL_RECOGNIZER)
 
     analyzer = AnalyzerEngine(

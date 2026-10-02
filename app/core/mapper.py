@@ -98,6 +98,7 @@ ENTITY_TAG_PREFIXES = {
     "UK_ADDRESS": "ADDRESS",
     "UK_VEHICLE": "VEHICLE",
     "EMAIL_ADDRESS": "EMAIL",
+    "URL": "URL",
 }
 
 

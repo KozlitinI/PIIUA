@@ -36,11 +36,34 @@ def test_uk_iban_recognition():
 
 
 def test_uk_phone_recognition():
-    text = "Контактний телефон відповідача: +380501234567."
+    text = "Контактний телефон відповідача: +380501234567, а також лінії: (044) 222-72-10, 222-72-45, 067-123-45-67."
     results = analyze_text(text)
     phone_results = [r for r in results if r.entity_type == "UK_PHONE"]
-    assert len(phone_results) == 1
-    assert "+380501234567" in text[phone_results[0].start:phone_results[0].end]
+    phone_texts = [text[r.start:r.end] for r in phone_results]
+    assert "+380501234567" in phone_texts
+    assert "(044) 222-72-10" in phone_texts
+    assert "222-72-45" in phone_texts
+    assert "067-123-45-67" in phone_texts
+
+
+def test_uk_url_recognition():
+    text = (
+        "Оновлення розміщуються на сайтах http://its.1c.ua/ та https://portal.1c.eu/ "
+        "(або відповідно http://its.bas-soft.eu та https://dl.bas-soft.eu/)."
+    )
+    pseudo_text, mapping, entities = process_pseudonymization(text)
+    url_entities = [e for e in entities if e.entity_type == "URL"]
+    assert len(url_entities) == 4
+    extracted_urls = [e.text for e in url_entities]
+    assert "http://its.1c.ua/" in extracted_urls
+    assert "https://portal.1c.eu/" in extracted_urls
+    assert "http://its.bas-soft.eu" in extracted_urls
+    assert "https://dl.bas-soft.eu/" in extracted_urls
+    assert "<URL_1>" in pseudo_text
+    assert "<URL_4>" in pseudo_text
+
+    restored = process_restoration(pseudo_text, mapping)
+    assert restored == text
 
 
 def test_uk_case_number_recognition():

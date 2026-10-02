@@ -10,6 +10,7 @@ from app.recognizers.uk_address import UkAddressRecognizer
 from app.recognizers.uk_vehicle import UkVehicleRecognizer
 from app.recognizers.uk_names import UkNameRecognizer
 from app.recognizers.uk_organization import UkOrganizationRecognizer
+from app.recognizers.uk_url import UkUrlRecognizer
 
 __all__ = [
     "UkRntrcRecognizer",
@@ -23,4 +24,5 @@ __all__ = [
     "UkVehicleRecognizer",
     "UkNameRecognizer",
     "UkOrganizationRecognizer",
+    "UkUrlRecognizer",
 ]
