@@ -60,7 +60,7 @@
 
 - **Варіант 1 (Git):**
   ```bash
-  git clone https://github.com/your-username/PIIUA.git
+  git clone https://github.com/KozlitinI/PIIUA.git
   cd PIIUA
   ```
 - **Варіант 2 (Завантаження ZIP):**
