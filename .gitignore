@@ -6,3 +6,8 @@ venv/
 .venv/
 __pycache__/
 *.py[cod]
+build.bat
+build_installer.py
+package_dist.py
+piiua.spec
+PIIUA_Setup.iss
