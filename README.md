@@ -98,7 +98,7 @@ run_app.bat
 
 1. **Клонуйте репозиторій та перейдіть у каталог проекту:**
    ```bash
-   git clone https://github.com/your-username/PIIUA.git
+   git clone https://github.com/KozlitinI/PIIUA.git
    cd PIIUA
    ```
 
