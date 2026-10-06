@@ -140,6 +140,8 @@ run_app.bat
 
 Copyright 2026 Ihor Kozlitin.
 
+https://kozlitin.net/
+
 You may use, modify, distribute, and use this software commercially
 in accordance with the terms of the Apache License, Version 2.0.
 
