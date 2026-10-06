@@ -4,13 +4,13 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688.svg)](https://fastapi.tiangolo.com)
 [![spaCy](https://img.shields.io/badge/spaCy-3.8-09A3D5.svg)](https://spacy.io)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Documentation PDF](https://img.shields.io/badge/Documentation-PDF-red.svg)](piiua_thesis.pdf)
+[![Documentation Markdown](https://img.shields.io/badge/Documentation-Markdown-blue.svg)](THESIS.md)
 
 **PIIUA** — це відкритий (Open Source) локальний веб-сервіс для автоматичного виявлення, псевдонімізації та де-псевдонімізації (відновлення) персональних даних (PII) в українських юридичних, судових та офіційних документах.
 
 Сервіс працює повністю локально на вашому комп'ютері без передачі даних у хмару, що забезпечує максимальну конфіденційність та відповідність вимогам законодавства про захист персональних даних.
 
-> 📄 Опис системи, її архітектури та алгоритмів доступний у документі **[piiua_thesis.pdf](piiua_thesis.pdf)**.
+> 📄 Опис системи, її архітектури та алгоритмів доступний у документі **[THESIS.md](THESIS.md)**.
 
 ---
 
