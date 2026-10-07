@@ -84,55 +84,56 @@
             line-height: 1.6;
         }
 
-        .pipeline-bar {
+        .toolbar-bar {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            backdrop-filter: blur(12px);
-            border-radius: 1rem;
-            padding: 1rem 1.5rem;
-            margin-bottom: 2rem;
-            overflow-x: auto;
+            justify-content: flex-end;
+            margin-bottom: 1.5rem;
         }
 
-        .pipeline-step {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-weight: 500;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            white-space: nowrap;
-        }
-
-        .pipeline-step.active {
-            color: var(--text-main);
+        .btn-clear-all {
+            background: rgba(244, 63, 94, 0.15);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            color: #fda4af;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.75rem;
             font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .step-number {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.08);
+        .btn-clear-all:hover {
+            background: rgba(244, 63, 94, 0.3);
+            color: #ffffff;
+            border-color: rgba(244, 63, 94, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25);
+        }
+
+        .btn-modal-clear {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: var(--text-muted);
+            gap: 0.5rem;
         }
 
-        .pipeline-step.active .step-number {
-            background: var(--gradient-badge);
-            color: #fff;
-        }
-
-        .pipeline-arrow {
-            color: rgba(255, 255, 255, 0.2);
-            font-size: 1.2rem;
+        .btn-modal-clear:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(244, 63, 94, 0.4);
         }
 
         .grid-2 {
@@ -542,32 +543,11 @@
             <p>Безпечний аналіз спору: виявлення персональних даних українських юридичних текстів, псевдонімізація для передачі в LLM та локальна де-псевдонімізація.</p>
         </header>
 
-        <!-- Pipeline Indicator -->
-        <div class="pipeline-bar">
-            <div class="pipeline-step active">
-                <div class="step-number">1</div>
-                <span>Вхідний документ (ОДР)</span>
-            </div>
-            <div class="pipeline-arrow">➔</div>
-            <div class="pipeline-step active">
-                <div class="step-number">2</div>
-                <span>Analyzer (NER)</span>
-            </div>
-            <div class="pipeline-arrow">➔</div>
-            <div class="pipeline-step active">
-                <div class="step-number">3</div>
-                <span>Псевдонімізація (<TOKEN>)</span>
-            </div>
-            <div class="pipeline-arrow">➔</div>
-            <div class="pipeline-step active">
-                <div class="step-number">4</div>
-                <span>LLM / Аналітичний модуль</span>
-            </div>
-            <div class="pipeline-arrow">➔</div>
-            <div class="pipeline-step active">
-                <div class="step-number">5</div>
-                <span>Локальне відновлення</span>
-            </div>
+        <!-- Action Toolbar / Clear All -->
+        <div class="toolbar-bar">
+            <button type="button" class="btn-clear-all" onclick="openClearAllModal()" title="Очистити всі текстові поля та словник для початку роботи з новим документом">
+                🗑️ Очистити все
+            </button>
         </div>
 
         <!-- Main Step 1 & Step 2 Layout -->
@@ -755,6 +735,30 @@
             </div>
         </div>
 
+        <!-- Modal for Clear All Confirmation -->
+        <div id="clearAllModal" class="modal-overlay" style="display: none;" onclick="if(event.target===this) closeClearAllModal()">
+            <div class="modal-card">
+                <div class="modal-header">
+                    ⚠️ Підтвердження очищення
+                </div>
+                <div class="modal-body">
+                    <strong>Чи дійсно Ви хочете все очистити?</strong>
+                    <br><br>
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">
+                        Всі текстові поля, виявлені PII сутності та «Словник Оборотної Мапи» будуть скинуті до початкового стану.
+                    </span>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-modal-clear" onclick="confirmClearAll()">
+                        🗑️ Так, очистити все
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeClearAllModal()" style="justify-content: center;">
+                        Скасувати
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <footer>
             Козлітін Ігор igor@kozlitin.net • Україна 2026
         </footer>
@@ -782,6 +786,21 @@
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
+                const clearModal = document.getElementById('clearAllModal');
+                if (clearModal && clearModal.style.display !== 'none') {
+                    closeClearAllModal();
+                    return;
+                }
+                const delModal = document.getElementById('deleteModal');
+                if (delModal && delModal.style.display !== 'none') {
+                    closeDeleteModal();
+                    return;
+                }
+                const addModal = document.getElementById('addTokenModal');
+                if (addModal && addModal.style.display !== 'none') {
+                    closeAddTokenModal();
+                    return;
+                }
                 const fsCard = document.querySelector('.card.fullscreen');
                 if (fsCard) {
                     const btn = fsCard.querySelector('.btn-fullscreen');
@@ -794,6 +813,93 @@
                 }
             }
         });
+
+        function openClearAllModal() {
+            document.getElementById('clearAllModal').style.display = 'flex';
+        }
+
+        function closeClearAllModal() {
+            document.getElementById('clearAllModal').style.display = 'none';
+        }
+
+        function confirmClearAll() {
+            // Reset input text
+            const inputText = document.getElementById('inputText');
+            if (inputText) inputText.value = '';
+
+            // Reset file inputs
+            const pdfInput = document.getElementById('pdfFileInput');
+            if (pdfInput) pdfInput.value = '';
+            const wordInput = document.getElementById('wordFileInput');
+            if (wordInput) wordInput.value = '';
+
+            // Reset status message
+            const statusMsg = document.getElementById('pdfStatusMsg');
+            if (statusMsg) {
+                statusMsg.style.display = 'none';
+                statusMsg.textContent = '';
+            }
+
+            // Reset spaCy model select
+            const spacyModelSelect = document.getElementById('spacyModelSelect');
+            if (spacyModelSelect) spacyModelSelect.value = 'uk_core_news_trf';
+
+            // Reset Run button state
+            const btnRun = document.getElementById('btnRunPseudonymization');
+            if (btnRun) {
+                btnRun.disabled = false;
+                btnRun.innerHTML = '⚡ Запустити PII-Псевдонімізацію';
+            }
+
+            // Reset Detected Entities area
+            const entityCountBadge = document.getElementById('entityCountBadge');
+            if (entityCountBadge) {
+                entityCountBadge.style.display = 'none';
+                entityCountBadge.textContent = '0 PII';
+            }
+            const entitiesBadges = document.getElementById('entitiesBadges');
+            if (entitiesBadges) {
+                entitiesBadges.innerHTML = '<span style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;">Натисніть "Запустити PII-Псевдонімізацію" для аналізу...</span>';
+            }
+            const highlightedBox = document.getElementById('highlightedBox');
+            if (highlightedBox) {
+                highlightedBox.innerHTML = '<span style="color: var(--text-muted); font-style: italic;">Тут відобразиться підсвічений текст з PII сутностями...</span>';
+            }
+
+            // Reset Pseudonymized text box and batch inputs
+            const pseudonymizedBox = document.getElementById('pseudonymizedBox');
+            if (pseudonymizedBox) pseudonymizedBox.value = '';
+            const findTokenInput = document.getElementById('findTokenInput');
+            if (findTokenInput) findTokenInput.value = '';
+            const replaceTokenInput = document.getElementById('replaceTokenInput');
+            if (replaceTokenInput) replaceTokenInput.value = '';
+
+            // Reset Mapping Table
+            const mappingTableBody = document.getElementById('mappingTableBody');
+            if (mappingTableBody) {
+                mappingTableBody.innerHTML = '<tr><td colspan="3" style="color: var(--text-muted); font-style: italic;">Словник порожній</td></tr>';
+            }
+
+            // Reset LLM Box and Restored Box
+            const llmBox = document.getElementById('llmBox');
+            if (llmBox) llmBox.value = '';
+            const restoredBox = document.getElementById('restoredBox');
+            if (restoredBox) {
+                restoredBox.innerHTML = '<span style="color: var(--text-muted); font-style: italic;">Тут з\'явиться підсумковий документ з відновленими реальними PII даними...</span>';
+            }
+
+            // Reset JS state variables
+            currentMapping = {};
+            customTokenCounter = 1;
+            pendingDeleteState = null;
+
+            // Exit fullscreen mode if active
+            const fsCards = document.querySelectorAll('.card.fullscreen');
+            fsCards.forEach(card => card.classList.remove('fullscreen'));
+            document.body.style.overflow = '';
+
+            closeClearAllModal();
+        }
 
         function triggerPdfUpload() {
             document.getElementById('pdfFileInput').click();
