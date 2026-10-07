@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="uk">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,9 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --bg-color: #0f172a;
@@ -33,7 +36,7 @@
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-color);
-            background-image: 
+            background-image:
                 radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
             color: var(--text-main);
@@ -112,6 +115,14 @@
             border-color: rgba(244, 63, 94, 0.5);
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25);
+        }
+
+        .btn-clear-all:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+            transform: none !important;
+            box-shadow: none !important;
         }
 
         .btn-modal-clear {
@@ -195,7 +206,7 @@
             margin: 0 !important;
             padding: 1.5rem 2rem !important;
             background: #0f172a !important;
-            background-image: 
+            background-image:
                 radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.25) 0px, transparent 60%),
                 radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.25) 0px, transparent 60%) !important;
             box-shadow: none !important;
@@ -313,16 +324,66 @@
             margin: 0 0.1rem;
         }
 
-        .tag-person { background: rgba(56, 189, 248, 0.25); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4); }
-        .tag-rntrc { background: rgba(251, 191, 36, 0.25); color: #fde047; border: 1px solid rgba(251, 191, 36, 0.4); }
-        .tag-passport { background: rgba(192, 132, 252, 0.25); color: #e9d5ff; border: 1px solid rgba(192, 132, 252, 0.4); }
-        .tag-iban { background: rgba(52, 211, 153, 0.25); color: #6ee7b7; border: 1px solid rgba(52, 211, 153, 0.4); }
-        .tag-phone { background: rgba(244, 63, 94, 0.25); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.4); }
-        .tag-case_num { background: rgba(129, 140, 248, 0.25); color: #c7d2fe; border: 1px solid rgba(129, 140, 248, 0.4); }
-        .tag-address { background: rgba(251, 146, 60, 0.25); color: #fdba74; border: 1px solid rgba(251, 146, 60, 0.4); }
-        .tag-email { background: rgba(168, 85, 247, 0.25); color: #f0abfc; border: 1px solid rgba(168, 85, 247, 0.4); }
-        .tag-vehicle { background: rgba(14, 165, 233, 0.25); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.4); }
-        .tag-org, .tag-organization { background: rgba(236, 72, 153, 0.25); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.4); }
+        .tag-person {
+            background: rgba(56, 189, 248, 0.25);
+            color: #7dd3fc;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+        }
+
+        .tag-rntrc {
+            background: rgba(251, 191, 36, 0.25);
+            color: #fde047;
+            border: 1px solid rgba(251, 191, 36, 0.4);
+        }
+
+        .tag-passport {
+            background: rgba(192, 132, 252, 0.25);
+            color: #e9d5ff;
+            border: 1px solid rgba(192, 132, 252, 0.4);
+        }
+
+        .tag-iban {
+            background: rgba(52, 211, 153, 0.25);
+            color: #6ee7b7;
+            border: 1px solid rgba(52, 211, 153, 0.4);
+        }
+
+        .tag-phone {
+            background: rgba(244, 63, 94, 0.25);
+            color: #fda4af;
+            border: 1px solid rgba(244, 63, 94, 0.4);
+        }
+
+        .tag-case_num {
+            background: rgba(129, 140, 248, 0.25);
+            color: #c7d2fe;
+            border: 1px solid rgba(129, 140, 248, 0.4);
+        }
+
+        .tag-address {
+            background: rgba(251, 146, 60, 0.25);
+            color: #fdba74;
+            border: 1px solid rgba(251, 146, 60, 0.4);
+        }
+
+        .tag-email {
+            background: rgba(168, 85, 247, 0.25);
+            color: #f0abfc;
+            border: 1px solid rgba(168, 85, 247, 0.4);
+        }
+
+        .tag-vehicle {
+            background: rgba(14, 165, 233, 0.25);
+            color: #38bdf8;
+            border: 1px solid rgba(14, 165, 233, 0.4);
+        }
+
+        .tag-org,
+        .tag-organization {
+            background: rgba(236, 72, 153, 0.25);
+            color: #f472b6;
+            border: 1px solid rgba(236, 72, 153, 0.4);
+        }
 
         .token-mapping-table {
             width: 100%;
@@ -331,7 +392,8 @@
             font-size: 0.9rem;
         }
 
-        .token-mapping-table th, .token-mapping-table td {
+        .token-mapping-table th,
+        .token-mapping-table td {
             padding: 0.6rem 0.8rem;
             text-align: left;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -458,8 +520,13 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .spinner {
@@ -473,7 +540,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .modal-card {
@@ -536,16 +605,19 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
             <h1>PII Псевдонімізація та Відновлення Токенів</h1>
-            <p>Безпечний аналіз спору: виявлення персональних даних українських юридичних текстів, псевдонімізація для передачі в LLM та локальна де-псевдонімізація.</p>
+            <p>Безпечний аналіз спору: виявлення персональних даних українських юридичних текстів, псевдонімізація для
+                передачі в LLM та локальне відновлення.</p>
         </header>
 
         <!-- Action Toolbar / Clear All -->
         <div class="toolbar-bar">
-            <button type="button" class="btn-clear-all" onclick="openClearAllModal()" title="Очистити всі текстові поля та словник для початку роботи з новим документом">
+            <button type="button" class="btn-clear-all" id="btnClearAll" onclick="openClearAllModal()"
+                title="Очистити всі текстові поля та словник для початку роботи з новим документом">
                 🗑️ Очистити все
             </button>
         </div>
@@ -559,31 +631,44 @@
                         <span>📄 1. Позиція сторони / Документ</span>
                     </div>
                     <div class="card-actions">
-                        <button type="button" class="btn btn-secondary btn-sample" onclick="triggerPdfUpload()" id="btnUploadPdf" title="Вибрати PDF-файл для завантаження тексту">
+                        <button type="button" class="btn btn-secondary btn-sample" onclick="triggerPdfUpload()"
+                            id="btnUploadPdf" title="Вибрати PDF-файл для завантаження тексту">
                             📂 Завантажити з PDF
                         </button>
-                        <input type="file" id="pdfFileInput" accept=".pdf,application/pdf" style="display: none;" onchange="handlePdfUpload(event)">
-                        <button type="button" class="btn btn-secondary btn-sample" onclick="triggerWordUpload()" id="btnUploadWord" title="Вибрати WORD-файл для завантаження тексту">
+                        <input type="file" id="pdfFileInput" accept=".pdf,application/pdf" style="display: none;"
+                            onchange="handlePdfUpload(event)">
+                        <button type="button" class="btn btn-secondary btn-sample" onclick="triggerWordUpload()"
+                            id="btnUploadWord" title="Вибрати WORD-файл для завантаження тексту">
                             📂 Завантажити з WORD
                         </button>
-                        <input type="file" id="wordFileInput" accept=".docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword" style="display: none;" onchange="handleWordUpload(event)">
-                        <button type="button" class="btn btn-secondary btn-sample btn-fullscreen" onclick="toggleCardFullscreen(this)" title="Розгорнути на весь екран">
+                        <input type="file" id="wordFileInput"
+                            accept=".docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
+                            style="display: none;" onchange="handleWordUpload(event)">
+                        <button type="button" class="btn btn-secondary btn-sample btn-fullscreen"
+                            onclick="toggleCardFullscreen(this)" title="Розгорнути на весь екран">
                             ⤢ Розгорнути
                         </button>
                     </div>
                 </div>
-                <div id="pdfStatusMsg" style="display: none; padding: 0.4rem 0.6rem; margin-bottom: 0.5rem; background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 0.5rem; color: var(--accent-emerald); font-size: 0.8rem; font-weight: 500;"></div>
-                <textarea id="inputText" placeholder="Введіть або вставте текст позиції сторони, позовної заяви чи медіаційного листування..."></textarea>
+                <div id="pdfStatusMsg"
+                    style="display: none; padding: 0.4rem 0.6rem; margin-bottom: 0.5rem; background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 0.5rem; color: var(--accent-emerald); font-size: 0.8rem; font-weight: 500;">
+                </div>
+                <textarea id="inputText"
+                    placeholder="Введіть або вставте текст позиції сторони, позовної заяви чи медіаційного листування..."></textarea>
                 <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
                     <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                        <label for="spacyModelSelect" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Модель spaCy:</label>
-                        <select id="spacyModelSelect" class="value-input" style="width: 100%; height: 42px; padding: 0.4rem 0.6rem; font-size: 0.85rem; font-weight: 600; color: var(--accent-blue); background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 0.75rem; outline: none; cursor: pointer;">
+                        <label for="spacyModelSelect"
+                            style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Модель
+                            spaCy:</label>
+                        <select id="spacyModelSelect" class="value-input"
+                            style="width: 100%; height: 42px; padding: 0.4rem 0.6rem; font-size: 0.85rem; font-weight: 600; color: var(--accent-blue); background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 0.75rem; outline: none; cursor: pointer;">
                             <option value="uk_core_news_trf" selected>uk_core_news_trf (Transformer)</option>
                             <option value="uk_core_news_lg">uk_core_news_lg (Large)</option>
                             <option value="uk_core_news_sm">uk_core_news_sm (Small)</option>
                         </select>
                     </div>
-                    <button class="btn" id="btnRunPseudonymization" onclick="runPseudonymization()" style="width: 100%; height: 42px;">
+                    <button class="btn" id="btnRunPseudonymization" onclick="runPseudonymization()"
+                        style="width: 100%; height: 42px;">
                         ⚡ Запустити PII-Псевдонімізацію
                     </button>
                 </div>
@@ -597,16 +682,19 @@
                     </div>
                     <div class="card-actions" style="display: flex; align-items: center; gap: 0.5rem;">
                         <span id="entityCountBadge" class="score-pill" style="display:none;">0 PII</span>
-                        <button type="button" class="btn btn-secondary btn-sample btn-fullscreen" onclick="toggleCardFullscreen(this)" title="Розгорнути на весь екран">
+                        <button type="button" class="btn btn-secondary btn-sample btn-fullscreen"
+                            onclick="toggleCardFullscreen(this)" title="Розгорнути на весь екран">
                             ⤢ Розгорнути
                         </button>
                     </div>
                 </div>
                 <div id="entitiesBadges" class="badge-list">
-                    <span style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;">Натисніть "Запустити PII-Псевдонімізацію" для аналізу...</span>
+                    <span style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;">Натисніть "Запустити
+                        PII-Псевдонімізацію" для аналізу...</span>
                 </div>
                 <div id="highlightedBox" class="pii-highlighted-box" style="margin-top: 0.5rem; flex: 1;">
-                    <span style="color: var(--text-muted); font-style: italic;">Тут відобразиться підсвічений текст з PII сутностями...</span>
+                    <span style="color: var(--text-muted); font-style: italic;">Тут відобразиться підсвічений текст з
+                        PII сутностями...</span>
                 </div>
             </div>
         </div>
@@ -620,26 +708,37 @@
                         <span>🔒 3. Псевдонімізований Текст (для LLM)</span>
                     </div>
                     <div class="card-actions">
-                        <button type="button" class="btn btn-secondary btn-sample btn-fullscreen" onclick="toggleCardFullscreen(this)" title="Розгорнути на весь екран">
+                        <button type="button" class="btn btn-secondary btn-sample btn-fullscreen"
+                            onclick="toggleCardFullscreen(this)" title="Розгорнути на весь екран">
                             ⤢ Розгорнути
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Batch Token Replacement Toolbar -->
-                <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; background: rgba(0, 0, 0, 0.25); padding: 0.5rem 0.75rem; border-radius: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.1);">
-                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; white-space: nowrap;">Заміна токена:</span>
-                    <input type="text" id="findTokenInput" placeholder="Шукати (<PERSON_4>)" class="token-input" style="font-size: 0.8rem; padding: 0.25rem 0.5rem; flex: 1;">
+                <div
+                    style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; background: rgba(0, 0, 0, 0.25); padding: 0.5rem 0.75rem; border-radius: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <span
+                        style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; white-space: nowrap;">Заміна
+                        токена:</span>
+                    <input type="text" id="findTokenInput" placeholder="Шукати (<PERSON_4>)" class="token-input"
+                        style="font-size: 0.8rem; padding: 0.25rem 0.5rem; flex: 1;">
                     <span style="font-size: 0.8rem; color: var(--text-muted);">➔</span>
-                    <input type="text" id="replaceTokenInput" placeholder="Замінити на (<PERSON_2>)" class="token-input" style="font-size: 0.8rem; padding: 0.25rem 0.5rem; flex: 1;">
-                    <button class="btn btn-secondary btn-sample" onclick="batchReplaceToken()" style="font-size: 0.8rem; padding: 0.3rem 0.7rem; white-space: nowrap;">Замінити</button>
+                    <input type="text" id="replaceTokenInput" placeholder="Замінити на (<PERSON_2>)" class="token-input"
+                        style="font-size: 0.8rem; padding: 0.25rem 0.5rem; flex: 1;">
+                    <button class="btn btn-secondary btn-sample" onclick="batchReplaceToken()"
+                        style="font-size: 0.8rem; padding: 0.3rem 0.7rem; white-space: nowrap;">Замінити</button>
                 </div>
 
-                <textarea id="pseudonymizedBox" placeholder="Псевдонімізований текст з унікальними токенами (редагований)..." style="height: 160px; margin-bottom: 1rem;"></textarea>
-                
+                <textarea id="pseudonymizedBox"
+                    placeholder="Псевдонімізований текст з унікальними токенами (редагований)..."
+                    style="height: 160px; margin-bottom: 1rem;"></textarea>
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                    <h4 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Словник Оборотної Мапи (Редагований)</h4>
-                    <button class="btn btn-secondary btn-sample" onclick="openAddTokenModal()" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">+ Додати токен</button>
+                    <h4 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Словник
+                        Оборотної Мапи (Редагований)</h4>
+                    <button class="btn btn-secondary btn-sample" onclick="openAddTokenModal()"
+                        style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">+ Додати токен</button>
                 </div>
                 <div style="max-height: 170px; overflow-y: auto;">
                     <table class="token-mapping-table">
@@ -651,7 +750,10 @@
                             </tr>
                         </thead>
                         <tbody id="mappingTableBody">
-                            <tr><td colspan="3" style="color: var(--text-muted); font-style: italic;">Словник порожній</td></tr>
+                            <tr>
+                                <td colspan="3" style="color: var(--text-muted); font-style: italic;">Словник порожній
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -664,28 +766,34 @@
                         <span>🤖 4. Локальне Відновлення Токенів (Де-псевдонімізація)</span>
                     </div>
                     <div class="card-actions">
-                        <button type="button" class="btn btn-secondary btn-sample btn-fullscreen" onclick="toggleCardFullscreen(this)" title="Розгорнути на весь екран">
+                        <button type="button" class="btn btn-secondary btn-sample btn-fullscreen"
+                            onclick="toggleCardFullscreen(this)" title="Розгорнути на весь екран">
                             ⤢ Розгорнути
                         </button>
                     </div>
                 </div>
-                <textarea id="llmBox" placeholder="Вставте оброблений LLM текст (з токенами <PERSON_1> і т.д.) для відновлення персональних даних..."></textarea>
+                <textarea id="llmBox"
+                    placeholder="Вставте оброблений LLM текст (з токенами <PERSON_1> і т.д.) для відновлення персональних даних..."></textarea>
                 <div style="margin-top: 1rem; margin-bottom: 1rem;">
-                    <button class="btn" onclick="runRestoration()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <button class="btn" onclick="runRestoration()"
+                        style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                         🔄 Локально Відновити Персональні Дані
                     </button>
                 </div>
                 <div id="restoredBox" class="pii-highlighted-box" style="height: 150px;">
-                    <span style="color: var(--text-muted); font-style: italic;">Тут з'явиться підсумковий документ з відновленими реальними PII даними...</span>
+                    <span style="color: var(--text-muted); font-style: italic;">Тут з'явиться підсумковий документ з
+                        відновленими реальними PII даними...</span>
                 </div>
             </div>
         </div>
 
         <!-- Modal for Token Deletion Confirmation -->
-        <div id="deleteModal" class="modal-overlay" style="display: none;" onclick="if(event.target===this) closeDeleteModal()">
+        <div id="deleteModal" class="modal-overlay" style="display: none;"
+            onclick="if(event.target===this) closeDeleteModal()">
             <div class="modal-card">
                 <div class="modal-header">
-                    🗑️ Видалення токена <span id="modalTokenName" class="token-code" style="margin-left:0.3rem;"></span>
+                    🗑️ Видалення токена <span id="modalTokenName" class="token-code"
+                        style="margin-left:0.3rem;"></span>
                 </div>
                 <div class="modal-body">
                     Оригінальне значення: <strong id="modalOrigValue"></strong><br><br>
@@ -695,10 +803,12 @@
                     <button id="modalBtnReplace" class="btn-modal-replace" onclick="confirmDeleteToken('replace')">
                         🔄 <span id="modalBtnReplaceText">Замінити токен початковим текстом</span>
                     </button>
-                    <button class="btn btn-secondary" onclick="confirmDeleteToken('remove')" style="justify-content: center;">
+                    <button class="btn btn-secondary" onclick="confirmDeleteToken('remove')"
+                        style="justify-content: center;">
                         🗑️ Просто видалити токен (без відновлення тексту)
                     </button>
-                    <button class="btn btn-secondary" onclick="closeDeleteModal()" style="justify-content: center; opacity: 0.7; margin-top: 0.25rem;">
+                    <button class="btn btn-secondary" onclick="closeDeleteModal()"
+                        style="justify-content: center; opacity: 0.7; margin-top: 0.25rem;">
                         Скасувати
                     </button>
                 </div>
@@ -706,21 +816,30 @@
         </div>
 
         <!-- Modal for Adding New Custom Token -->
-        <div id="addTokenModal" class="modal-overlay" style="display: none;" onclick="if(event.target===this) closeAddTokenModal()">
+        <div id="addTokenModal" class="modal-overlay" style="display: none;"
+            onclick="if(event.target===this) closeAddTokenModal()">
             <div class="modal-card">
                 <div class="modal-header">
                     ➕ Додати Новий Токен
                 </div>
                 <div class="modal-body" style="margin-bottom: 1rem;">
-                    Вкажіть оригінальні дані (текст у документі) та токен, яким його буде замінено в псевдонімізованому тексті.
+                    Вкажіть оригінальні дані (текст у документі) та токен, яким його буде замінено в псевдонімізованому
+                    тексті.
                     <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
                         <div>
-                            <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.25rem;">Оригінальні PII дані (текст для заміни):</label>
-                            <input type="text" id="addOrigValueInput" placeholder="напр. ТОВ «Техно-Сервіс» або Петренко В.О." class="value-input" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <label
+                                style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.25rem;">Оригінальні
+                                PII дані (текст для заміни):</label>
+                            <input type="text" id="addOrigValueInput"
+                                placeholder="напр. ТОВ «Техно-Сервіс» або Петренко В.О." class="value-input"
+                                style="padding: 0.5rem; font-size: 0.9rem;">
                         </div>
                         <div>
-                            <label style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.25rem;">Новий токен:</label>
-                            <input type="text" id="addTokenInput" placeholder="напр. <CUSTOM_1> або <ORG_3>" class="token-input" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <label
+                                style="display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.25rem;">Новий
+                                токен:</label>
+                            <input type="text" id="addTokenInput" placeholder="напр. <CUSTOM_1> або <ORG_3>"
+                                class="token-input" style="padding: 0.5rem; font-size: 0.9rem;">
                         </div>
                     </div>
                 </div>
@@ -728,7 +847,8 @@
                     <button class="btn-modal-replace" onclick="submitAddToken()">
                         ⚡ Замінити в тексті та додати до словника
                     </button>
-                    <button class="btn btn-secondary" onclick="closeAddTokenModal()" style="justify-content: center; opacity: 0.7;">
+                    <button class="btn btn-secondary" onclick="closeAddTokenModal()"
+                        style="justify-content: center; opacity: 0.7;">
                         Скасувати
                     </button>
                 </div>
@@ -736,7 +856,8 @@
         </div>
 
         <!-- Modal for Clear All Confirmation -->
-        <div id="clearAllModal" class="modal-overlay" style="display: none;" onclick="if(event.target===this) closeClearAllModal()">
+        <div id="clearAllModal" class="modal-overlay" style="display: none;"
+            onclick="if(event.target===this) closeClearAllModal()">
             <div class="modal-card">
                 <div class="modal-header">
                     ⚠️ Підтвердження очищення
@@ -745,7 +866,8 @@
                     <strong>Чи дійсно Ви хочете все очистити?</strong>
                     <br><br>
                     <span style="font-size: 0.85rem; color: var(--text-muted);">
-                        Всі текстові поля, виявлені PII сутності та «Словник Оборотної Мапи» будуть скинуті до початкового стану.
+                        Всі текстові поля, виявлені PII сутності та «Словник Оборотної Мапи» будуть скинуті до
+                        початкового стану.
                     </span>
                 </div>
                 <div class="modal-actions">
@@ -772,7 +894,7 @@
             if (!card) return;
 
             const isFullscreen = card.classList.toggle('fullscreen');
-            
+
             if (isFullscreen) {
                 btn.innerHTML = '🗗 Згорнути';
                 btn.title = 'Згорнути у звичайний режим (або натисніть Esc)';
@@ -784,7 +906,7 @@
             }
         }
 
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 const clearModal = document.getElementById('clearAllModal');
                 if (clearModal && clearModal.style.display !== 'none') {
@@ -815,6 +937,8 @@
         });
 
         function openClearAllModal() {
+            const btnClearAll = document.getElementById('btnClearAll');
+            if (btnClearAll && btnClearAll.disabled) return;
             document.getElementById('clearAllModal').style.display = 'flex';
         }
 
@@ -844,12 +968,14 @@
             const spacyModelSelect = document.getElementById('spacyModelSelect');
             if (spacyModelSelect) spacyModelSelect.value = 'uk_core_news_trf';
 
-            // Reset Run button state
+            // Reset Run button and Clear All button states
             const btnRun = document.getElementById('btnRunPseudonymization');
             if (btnRun) {
                 btnRun.disabled = false;
                 btnRun.innerHTML = '⚡ Запустити PII-Псевдонімізацію';
             }
+            const btnClearAll = document.getElementById('btnClearAll');
+            if (btnClearAll) btnClearAll.disabled = false;
 
             // Reset Detected Entities area
             const entityCountBadge = document.getElementById('entityCountBadge');
@@ -1033,11 +1159,15 @@
             const modelName = spacyModelSelect ? spacyModelSelect.value : 'uk_core_news_trf';
 
             const btn = document.getElementById('btnRunPseudonymization');
+            const btnClearAll = document.getElementById('btnClearAll');
             const originalBtnHtml = btn ? btn.innerHTML : '⚡ Запустити PII-Псевдонімізацію';
 
             if (btn) {
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner"></span> Обробка триває ...';
+            }
+            if (btnClearAll) {
+                btnClearAll.disabled = true;
             }
 
             try {
@@ -1077,6 +1207,9 @@
                 if (btn) {
                     btn.disabled = false;
                     btn.innerHTML = originalBtnHtml;
+                }
+                if (btnClearAll) {
+                    btnClearAll.disabled = false;
                 }
             }
         }
@@ -1120,7 +1253,7 @@
             sorted.forEach(ent => {
                 const tagClass = 'tag-' + ent.entity_type.toLowerCase().replace('uk_', '');
                 const snippet = html.substring(ent.start, ent.end);
-                const replacement = `<span class="pii-tag ${tagClass}" title="${ent.entity_type} (${Math.round(ent.score*100)}%)">${escapeHtml(snippet)}</span>`;
+                const replacement = `<span class="pii-tag ${tagClass}" title="${ent.entity_type} (${Math.round(ent.score * 100)}%)">${escapeHtml(snippet)}</span>`;
                 html = html.substring(0, ent.start) + replacement + html.substring(ent.end);
             });
 
@@ -1145,7 +1278,7 @@
 
         function addMappingRow(token = '', value = '', updateAfter = true) {
             const tbody = document.getElementById('mappingTableBody');
-            
+
             // Remove empty message if present
             if (tbody.children.length === 1 && tbody.children[0].cells.length < 3) {
                 tbody.innerHTML = '';
@@ -1198,7 +1331,7 @@
         function showDeleteModal(tokenVal, origVal) {
             document.getElementById('modalTokenName').textContent = tokenVal;
             document.getElementById('modalOrigValue').textContent = origVal ? `«${origVal}»` : '(порожньо)';
-            
+
             const btnReplace = document.getElementById('modalBtnReplace');
             const btnReplaceText = document.getElementById('modalBtnReplaceText');
 
@@ -1222,9 +1355,9 @@
         function openAddTokenModal() {
             const origInput = document.getElementById('addOrigValueInput');
             const tokenInput = document.getElementById('addTokenInput');
-            
+
             origInput.value = '';
-            
+
             let suggestedToken = `<CUSTOM_${customTokenCounter}>`;
             while (currentMapping[suggestedToken]) {
                 customTokenCounter++;
@@ -1345,7 +1478,7 @@
 
             let pseudoText = pseudoBox ? pseudoBox.value : '';
             let llmText = llmBox ? llmBox.value : '';
-            
+
             rows.forEach(row => {
                 const tokenInput = row.querySelector('.token-input');
                 const valueInput = row.querySelector('.value-input');
@@ -1542,4 +1675,5 @@
         }
     </script>
 </body>
+
 </html>
