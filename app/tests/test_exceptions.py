@@ -7,6 +7,11 @@ client = TestClient(app)
 
 
 def test_exceptions_crud():
+    # Cleanup any existing test item
+    for item in get_all_exceptions():
+        if item["text"] in ("Тестовий Суд 123", "Оновлений Суд 123"):
+            delete_exception(item["id"])
+
     # 1. Create exception
     payload = {"text": "Тестовий Суд 123"}
     resp = client.post("/api/v1/exceptions", json=payload)
@@ -39,6 +44,11 @@ def test_exceptions_crud():
 
 
 def test_pseudonymization_respects_exceptions():
+    # Cleanup any existing test item
+    for item in get_all_exceptions():
+        if item["text"] == "Коваленко Олександр Сергійович":
+            delete_exception(item["id"])
+
     # Add exception fragment
     exc_text = "Коваленко Олександр Сергійович"
     added = add_exception(exc_text)
@@ -61,3 +71,38 @@ def test_pseudonymization_respects_exceptions():
 
     finally:
         delete_exception(exc_id)
+
+
+def test_fop_paktum_and_flydoc_exceptions():
+    # Cleanup any existing test items
+    for item in get_all_exceptions():
+        if item["text"] in ("ФОППактум", "ФОПFlyDoc"):
+            delete_exception(item["id"])
+
+    exc1 = add_exception("ФОППактум")["id"]
+    exc2 = add_exception("ФОПFlyDoc")["id"]
+
+    try:
+        contract_snippet = (
+            "Оплата послуг ФОППактум та сервісу ФОПFlyDoc здійснюється згідно договору. "
+            "Пакет ФОП Пактум та ФОП FlyDoc на місяць."
+        )
+        payload = {
+            "text": contract_snippet,
+            "score_threshold": 0.4
+        }
+        resp = client.post("/api/v1/pseudonymize", json=payload)
+        assert resp.status_code == 200
+        data = resp.json()
+
+        pseudo_text = data["pseudonymized_text"]
+        # None of the exception phrases should be replaced with tokens <ORG_...>
+        assert "ФОППактум" in pseudo_text
+        assert "ФОПFlyDoc" in pseudo_text
+        assert "ФОП Пактум" in pseudo_text
+        assert "ФОП FlyDoc" in pseudo_text
+        assert "<ORG_1>" not in pseudo_text
+        assert "<ORG_2>" not in pseudo_text
+    finally:
+        delete_exception(exc1)
+        delete_exception(exc2)

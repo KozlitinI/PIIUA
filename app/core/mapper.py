@@ -6,6 +6,8 @@ from typing import Dict, List, Optional, Tuple
 import pymorphy3
 from presidio_analyzer import RecognizerResult
 from app.schemas.api import DetectedEntity
+from app.core.exceptions_db import get_exception_texts, is_exception_match
+
 
 _morph_analyzer: Optional[pymorphy3.MorphAnalyzer] = None
 
@@ -200,6 +202,13 @@ def pseudonymize_text_with_mapping(
     2. Token mapping dictionary (token -> original value)
     3. List of DetectedEntity objects
     """
+    db_exceptions = get_exception_texts()
+    if db_exceptions:
+        results = [
+            r for r in results
+            if not is_exception_match(text[r.start:r.end], db_exceptions, r.entity_type)
+        ]
+
     filtered_results = resolve_overlapping_entities(results)
     mapper = TokenMapper()
     detected_entities: List[DetectedEntity] = []

@@ -1,9 +1,10 @@
 # Copyright 2026 Ihor Kozlitin
 # SPDX-License-Identifier: Apache-2.0
 
+import re
 import sqlite3
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DB_PATH = BASE_DIR / "exceptions.db"
@@ -53,6 +54,55 @@ def get_exception_texts() -> List[str]:
         return [r["text"] for r in cursor.fetchall()]
 
 
+def normalize_compact(s: str) -> str:
+    """
+    Removes all whitespace, newlines, and punctuation, converting to lowercase.
+    """
+    if not s:
+        return ""
+    return re.sub(r'[\s\"«\'“»\'”\.\,:;\(\)\[\]\{\}\-\–\—\_\/\\]+', '', s).lower()
+
+
+def is_exception_match(val: str, exceptions_list: List[str], entity_type: Optional[str] = None) -> bool:
+    """
+    Checks if a text fragment or entity value matches any exception in exceptions_list.
+    Handles exact match, normalized whitespace/punctuation match, and full substring containment.
+    For technical formats (URL, EMAIL_ADDRESS, IBAN, PHONE, etc.), requires exact or compact match.
+    """
+    if not val or not exceptions_list:
+        return False
+
+    val_clean = val.strip().lower()
+    val_compact = normalize_compact(val)
+
+    # Technical entity types require exact or compact match
+    is_technical = entity_type in (
+        "URL", "EMAIL_ADDRESS", "UK_IBAN", "UK_PHONE", 
+        "UK_RNTRC", "UK_EDRPOU", "UK_MFO", "UK_PASSPORT"
+    )
+
+    for exc in exceptions_list:
+        exc_clean = exc.strip().lower()
+        if not exc_clean:
+            continue
+
+        # 1. Exact or stripped case-insensitive match
+        if val_clean == exc_clean:
+            return True
+
+        # 2. Compact match (ignoring spaces, quotes, newlines, punctuation)
+        exc_compact = normalize_compact(exc)
+        if val_compact and exc_compact and val_compact == exc_compact:
+            return True
+
+        # 3. Substring containment for non-technical entity types (ORGANIZATION, PERSON, etc.)
+        if not is_technical and len(exc_compact) >= 3 and len(val_compact) >= 3:
+            if exc_compact in val_compact or val_compact in exc_compact:
+                return True
+
+    return False
+
+
 def add_exception(text: str) -> Dict[str, Any]:
     """
     Adds a new unique text fragment to exceptions database.
@@ -70,8 +120,6 @@ def add_exception(text: str) -> Dict[str, Any]:
             )
             conn.commit()
             exc_id = cursor.lastrowid
-            
-            # Fetch created item
             row = conn.execute("SELECT id, text, created_at FROM exceptions WHERE id = ?", (exc_id,)).fetchone()
             return dict(row)
     except sqlite3.IntegrityError:

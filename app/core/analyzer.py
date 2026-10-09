@@ -63,8 +63,9 @@ from app.recognizers.uk_vehicle import UkVehicleRecognizer
 from app.recognizers.uk_names import UkNameRecognizer
 from app.recognizers.uk_organization import UkOrganizationRecognizer, EXCLUDED_CONTRACT_TERMS
 from app.recognizers.uk_url import UkUrlRecognizer
-from app.core.exceptions_db import get_exception_texts
+from app.core.exceptions_db import get_exception_texts, is_exception_match
 from app.core.mapper import normalize_uk_person_name
+
 
 
 logger = logging.getLogger("piiua.analyzer")
@@ -232,32 +233,32 @@ def analyze_text(
     excluded_pattern = re.compile(rf'^(?:{"|".join(re.escape(t) for t in sorted_terms)})\b\s*', re.IGNORECASE)
 
     db_exceptions = get_exception_texts()
-    exceptions_set = set()
-    for exc_str in db_exceptions:
-        s_clean = exc_str.strip().lower()
-        if s_clean:
-            exceptions_set.add(s_clean)
-            exceptions_set.add(exc_str.strip(" \"«'“»'”.,:;()[]{}").strip().lower())
 
     cleaned_results = []
     for r in results:
         s, e = r.start, r.end
         val = text[s:e]
-        clean_val = val.strip(" \"«'“»'”.,:;()[]{}").strip().lower()
-        raw_clean = val.strip().lower()
 
-        # Filter out if entity text or normalized entity text is in exceptions DB
-        if clean_val in exceptions_set or raw_clean in exceptions_set:
+        # 1. Filter out if raw or clean entity text matches SQLite exceptions DB
+        if is_exception_match(val, db_exceptions, r.entity_type):
+            continue
+
+        clean_val = val.strip(" \"«'“»'”.,:;()[]{}").strip()
+        if is_exception_match(clean_val, db_exceptions, r.entity_type):
             continue
 
         if r.entity_type == "PERSON":
-            norm_person = normalize_uk_person_name(val).strip().lower()
-            if norm_person in exceptions_set:
+            norm_person = normalize_uk_person_name(val)
+            if is_exception_match(norm_person, db_exceptions, r.entity_type):
                 continue
         elif r.entity_type in ("ORGANIZATION", "ORG"):
-            core_org = re.sub(r"^(?:ТОВ|ТзОВ|ПП|ПрАТ|ПАТ|АТ|ДП|ГО|ОСББ|БФ|ФОП)\s*", "", val.strip())
-            core_org_clean = core_org.strip(" \"«'“»'”.,:;()[]{}").strip().lower()
-            if core_org_clean in exceptions_set:
+            core_org = re.sub(
+                r"^(?:Товариство з обмеженою в[іiІI]дпов[іiІI]дальн[іiІI]стю|Товариство з додатковою в[іiІI]дпов[іiІI]дальн[іiІI]стю|Приватне акц[іiІI]онерне товариство|Публ[іiІI]чне акц[іiІI]онерне товариство|Акц[іiІI]онерне товариство|Приватне п[іiІI]дприємство|Комунальне п[іiІI]дприємство|Державне п[іiІI]дприємство|Громадська орган[іiІI]зац[іiІI]я|Благод[іiІI]ний фонд|Благод[іiІI]йна орган[іiІI]зац[іiІI]я|Фермерське господарство|Об'єднання сп[іiІI]ввласник[іiІI]в багатоквартирного будинку|\bТОВ\b|\bТзОВ\b|\bПП\b|\bПрАТ\b|\bПАТ\b|\bАТ\b|\bДП\b|\bГО\b|\bКП\b|\bОСББ\b|\bБФ\b|\bФОП\b)\s*",
+                "",
+                val.strip(),
+                flags=re.IGNORECASE
+            )
+            if is_exception_match(core_org, db_exceptions, r.entity_type):
                 continue
 
         if r.entity_type == "ORGANIZATION":
@@ -267,6 +268,8 @@ def analyze_text(
                 val = text[s:e]
                 clean_val = val.strip(" \"«'“»'”.,:;()[]{}").strip().lower()
             if not clean_val or clean_val in EXCLUDED_CONTRACT_TERMS or clean_val.isdigit():
+                continue
+            if is_exception_match(val, db_exceptions, r.entity_type) or is_exception_match(clean_val, db_exceptions, r.entity_type):
                 continue
         else:
             if not clean_val or clean_val in EXCLUDED_CONTRACT_TERMS:
