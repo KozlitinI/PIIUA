@@ -1045,7 +1045,7 @@
             const spacyModelSelect = document.getElementById('spacyModelSelect');
             if (spacyModelSelect) spacyModelSelect.value = 'uk_core_news_trf';
 
-            // Reset Run button and Clear All button states
+            // Reset buttons states
             const btnRun = document.getElementById('btnRunPseudonymization');
             if (btnRun) {
                 btnRun.disabled = false;
@@ -1053,6 +1053,12 @@
             }
             const btnClearAll = document.getElementById('btnClearAll');
             if (btnClearAll) btnClearAll.disabled = false;
+            const btnUploadPdf = document.getElementById('btnUploadPdf');
+            if (btnUploadPdf) btnUploadPdf.disabled = false;
+            const btnUploadWord = document.getElementById('btnUploadWord');
+            if (btnUploadWord) btnUploadWord.disabled = false;
+            const btnExceptionsList = document.getElementById('btnExceptionsList');
+            if (btnExceptionsList) btnExceptionsList.disabled = false;
 
             // Reset Detected Entities area
             const entityCountBadge = document.getElementById('entityCountBadge');
@@ -1105,6 +1111,8 @@
         }
 
         function triggerPdfUpload() {
+            const btn = document.getElementById('btnUploadPdf');
+            if (btn && btn.disabled) return;
             document.getElementById('pdfFileInput').click();
         }
 
@@ -1165,6 +1173,8 @@
         }
 
         function triggerWordUpload() {
+            const btn = document.getElementById('btnUploadWord');
+            if (btn && btn.disabled) return;
             document.getElementById('wordFileInput').click();
         }
 
@@ -1238,6 +1248,8 @@
             const btn = document.getElementById('btnRunPseudonymization');
             const btnClearAll = document.getElementById('btnClearAll');
             const btnExceptionsList = document.getElementById('btnExceptionsList');
+            const btnUploadPdf = document.getElementById('btnUploadPdf');
+            const btnUploadWord = document.getElementById('btnUploadWord');
             const originalBtnHtml = btn ? btn.innerHTML : '⚡ Запустити PII-Псевдонімізацію';
 
             if (btn) {
@@ -1249,6 +1261,12 @@
             }
             if (btnExceptionsList) {
                 btnExceptionsList.disabled = true;
+            }
+            if (btnUploadPdf) {
+                btnUploadPdf.disabled = true;
+            }
+            if (btnUploadWord) {
+                btnUploadWord.disabled = true;
             }
 
             try {
@@ -1294,6 +1312,12 @@
                 }
                 if (btnExceptionsList) {
                     btnExceptionsList.disabled = false;
+                }
+                if (btnUploadPdf) {
+                    btnUploadPdf.disabled = false;
+                }
+                if (btnUploadWord) {
+                    btnUploadWord.disabled = false;
                 }
             }
         }
