@@ -20,9 +20,22 @@ from app.schemas.api import (
     ExtractPDFResponse,
     ExtractWordResponse,
     DetectedEntity,
+    ExceptionItem,
+    ExceptionCreateRequest,
+    ExceptionUpdateRequest,
+    ExceptionListResponse,
 )
 from app.core.analyzer import analyze_text
 from app.core.anonymizer import process_pseudonymization, process_restoration
+from app.core.exceptions_db import (
+    init_db,
+    get_all_exceptions,
+    add_exception,
+    update_exception,
+    delete_exception,
+)
+
+init_db()
 
 app = FastAPI(
     title="PIIUA - Ukrainian PII Pseudonymization & Restoration Service for Mediation/ODR",
@@ -244,5 +257,64 @@ async def extract_word_text(file: UploadFile = File(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Помилка при зчитуванні Word-файлу: {str(e)}")
+
+
+@app.get("/api/v1/exceptions", response_model=ExceptionListResponse)
+async def list_exceptions():
+    """
+    Get all text fragments from the local SQLite exceptions database.
+    """
+    try:
+        items = get_all_exceptions()
+        return ExceptionListResponse(exceptions=[ExceptionItem(**item) for item in items])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/v1/exceptions", response_model=ExceptionItem)
+async def create_exception(request: ExceptionCreateRequest):
+    """
+    Add a new text fragment to the local SQLite exceptions database.
+    Ensures uniqueness of exception strings.
+    """
+    try:
+        item = add_exception(request.text)
+        return ExceptionItem(**item)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/api/v1/exceptions/{exception_id}", response_model=ExceptionItem)
+async def edit_exception(exception_id: int, request: ExceptionUpdateRequest):
+    """
+    Update an existing text fragment in the local SQLite exceptions database.
+    Ensures uniqueness of exception strings.
+    """
+    try:
+        item = update_exception(exception_id, request.text)
+        return ExceptionItem(**item)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except KeyError as ke:
+        raise HTTPException(status_code=404, detail=str(ke))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/v1/exceptions/{exception_id}")
+async def remove_exception(exception_id: int):
+    """
+    Delete a text fragment from the local SQLite exceptions database by ID.
+    """
+    try:
+        delete_exception(exception_id)
+        return {"status": "ok", "message": "Виключення успішно видалено", "id": exception_id}
+    except KeyError as ke:
+        raise HTTPException(status_code=404, detail=str(ke))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 

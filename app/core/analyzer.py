@@ -63,6 +63,9 @@ from app.recognizers.uk_vehicle import UkVehicleRecognizer
 from app.recognizers.uk_names import UkNameRecognizer
 from app.recognizers.uk_organization import UkOrganizationRecognizer, EXCLUDED_CONTRACT_TERMS
 from app.recognizers.uk_url import UkUrlRecognizer
+from app.core.exceptions_db import get_exception_texts
+from app.core.mapper import normalize_uk_person_name
+
 
 logger = logging.getLogger("piiua.analyzer")
 
@@ -224,15 +227,39 @@ def analyze_text(
         return_decision_process=False,
     )
 
-    # 1. Clean/trim ORGANIZATION results starting with job titles / contract terms
+    # 1. Clean/trim ORGANIZATION results starting with job titles / contract terms & check SQLite exception list
     sorted_terms = sorted(EXCLUDED_CONTRACT_TERMS, key=len, reverse=True)
     excluded_pattern = re.compile(rf'^(?:{"|".join(re.escape(t) for t in sorted_terms)})\b\s*', re.IGNORECASE)
+
+    db_exceptions = get_exception_texts()
+    exceptions_set = set()
+    for exc_str in db_exceptions:
+        s_clean = exc_str.strip().lower()
+        if s_clean:
+            exceptions_set.add(s_clean)
+            exceptions_set.add(exc_str.strip(" \"«'“»'”.,:;()[]{}").strip().lower())
 
     cleaned_results = []
     for r in results:
         s, e = r.start, r.end
         val = text[s:e]
         clean_val = val.strip(" \"«'“»'”.,:;()[]{}").strip().lower()
+        raw_clean = val.strip().lower()
+
+        # Filter out if entity text or normalized entity text is in exceptions DB
+        if clean_val in exceptions_set or raw_clean in exceptions_set:
+            continue
+
+        if r.entity_type == "PERSON":
+            norm_person = normalize_uk_person_name(val).strip().lower()
+            if norm_person in exceptions_set:
+                continue
+        elif r.entity_type in ("ORGANIZATION", "ORG"):
+            core_org = re.sub(r"^(?:ТОВ|ТзОВ|ПП|ПрАТ|ПАТ|АТ|ДП|ГО|ОСББ|БФ|ФОП)\s*", "", val.strip())
+            core_org_clean = core_org.strip(" \"«'“»'”.,:;()[]{}").strip().lower()
+            if core_org_clean in exceptions_set:
+                continue
+
         if r.entity_type == "ORGANIZATION":
             m = excluded_pattern.match(val)
             if m:
@@ -246,6 +273,7 @@ def analyze_text(
                 continue
         r.start, r.end = s, e
         cleaned_results.append(r)
+
 
     # 2. Overlap resolution: PERSON entities take precedence over overlapping ORGANIZATION entities
     person_spans = [(r.start, r.end) for r in cleaned_results if r.entity_type == "PERSON"]

@@ -55,3 +55,22 @@ class ExtractWordResponse(BaseModel):
     text: str = Field(..., description="Extracted text from the Word file")
 
 
+class ExceptionItem(BaseModel):
+    id: int = Field(..., description="Unique ID of exception item")
+    text: str = Field(..., description="Text fragment excluded from pseudonymization")
+    created_at: Optional[str] = Field(None, description="Creation timestamp")
+
+
+class ExceptionCreateRequest(BaseModel):
+    text: str = Field(..., description="Text fragment to add to exceptions list")
+
+
+class ExceptionUpdateRequest(BaseModel):
+    text: str = Field(..., description="New text fragment for existing exception")
+
+
+class ExceptionListResponse(BaseModel):
+    exceptions: List[ExceptionItem] = Field(default_factory=list)
+
+
+

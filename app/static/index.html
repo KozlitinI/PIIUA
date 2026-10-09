@@ -285,6 +285,14 @@
             transform: translateY(-1px);
         }
 
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
         .btn-secondary {
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.15);
@@ -614,8 +622,12 @@
                 передачі в LLM та локальне відновлення.</p>
         </header>
 
-        <!-- Action Toolbar / Clear All -->
-        <div class="toolbar-bar">
+        <!-- Action Toolbar / Clear All & Exceptions -->
+        <div class="toolbar-bar" style="gap: 0.75rem;">
+            <button type="button" class="btn btn-secondary" id="btnExceptionsList" onclick="openExceptionsModal()"
+                title="Управління локальним списком виключень (текстових фрагментів, які не замінюються на токени)">
+                📋 Список виключень
+            </button>
             <button type="button" class="btn-clear-all" id="btnClearAll" onclick="openClearAllModal()"
                 title="Очистити всі текстові поля та словник для початку роботи з новим документом">
                 🗑️ Очистити все
@@ -803,6 +815,12 @@
                     <button id="modalBtnReplace" class="btn-modal-replace" onclick="confirmDeleteToken('replace')">
                         🔄 <span id="modalBtnReplaceText">Замінити токен початковим текстом</span>
                     </button>
+                    <button id="modalBtnReplaceAndExcept" class="btn-modal-replace"
+                        onclick="confirmDeleteToken('replace_and_except')"
+                        style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);">
+                        📋 <span id="modalBtnReplaceAndExceptText">Замінити токен початковим текстом з додаванням до
+                            списку виключень</span>
+                    </button>
                     <button class="btn btn-secondary" onclick="confirmDeleteToken('remove')"
                         style="justify-content: center;">
                         🗑️ Просто видалити токен (без відновлення тексту)
@@ -881,6 +899,60 @@
             </div>
         </div>
 
+        <!-- Modal for Exceptions List Management -->
+        <div id="exceptionsModal" class="modal-overlay" style="display: none;"
+            onclick="if(event.target===this) closeExceptionsModal()">
+            <div class="modal-card" style="max-width: 650px; width: 95%;">
+                <div class="modal-header" style="justify-content: space-between;">
+                    <span>📋 Список виключень</span>
+                    <button type="button" class="btn-icon" onclick="closeExceptionsModal()"
+                        style="font-size: 1.2rem; color: var(--text-muted);">&times;</button>
+                </div>
+                <div class="modal-body" style="margin-bottom: 1rem;">
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">
+                        Текстові фрагменти у цьому списку не будуть замінюватись на токени під час PII-псевдонімізації.
+                    </span>
+                    <div style="margin-top: 1rem; display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" id="newExceptionInput" placeholder="Введіть новий текстовий фрагмент..."
+                            class="value-input" style="padding: 0.5rem; font-size: 0.9rem; flex: 1;"
+                            onkeydown="if(event.key==='Enter'){ addExceptionFromModal(); }">
+                        <button class="btn-modal-replace" onclick="addExceptionFromModal()"
+                            style="white-space: nowrap; padding: 0.5rem 1rem;">
+                            ➕ Додати
+                        </button>
+                    </div>
+                    <div id="exceptionErrorMsg"
+                        style="display: none; margin-top: 0.5rem; color: #fda4af; font-size: 0.85rem; background: rgba(244, 63, 94, 0.15); padding: 0.4rem 0.6rem; border-radius: 0.4rem; border: 1px solid rgba(244, 63, 94, 0.3);">
+                    </div>
+                </div>
+
+                <div
+                    style="max-height: 280px; overflow-y: auto; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.5rem; margin-bottom: 1rem;">
+                    <table class="token-mapping-table" style="margin-top: 0;">
+                        <thead>
+                            <tr>
+                                <th style="width: 70%;">Текстовий фрагмент</th>
+                                <th style="width: 30%; text-align: center;">Дії</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exceptionsTableBody">
+                            <tr>
+                                <td colspan="2"
+                                    style="color: var(--text-muted); font-style: italic; text-align: center;">
+                                    Завантаження...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeExceptionsModal()" style="justify-content: center;">
+                        Закрити
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <footer>
             Козлітін Ігор igor@kozlitin.net • Україна 2026
         </footer>
@@ -908,6 +980,11 @@
 
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
+                const excModal = document.getElementById('exceptionsModal');
+                if (excModal && excModal.style.display !== 'none') {
+                    closeExceptionsModal();
+                    return;
+                }
                 const clearModal = document.getElementById('clearAllModal');
                 if (clearModal && clearModal.style.display !== 'none') {
                     closeClearAllModal();
@@ -1160,6 +1237,7 @@
 
             const btn = document.getElementById('btnRunPseudonymization');
             const btnClearAll = document.getElementById('btnClearAll');
+            const btnExceptionsList = document.getElementById('btnExceptionsList');
             const originalBtnHtml = btn ? btn.innerHTML : '⚡ Запустити PII-Псевдонімізацію';
 
             if (btn) {
@@ -1168,6 +1246,9 @@
             }
             if (btnClearAll) {
                 btnClearAll.disabled = true;
+            }
+            if (btnExceptionsList) {
+                btnExceptionsList.disabled = true;
             }
 
             try {
@@ -1210,6 +1291,9 @@
                 }
                 if (btnClearAll) {
                     btnClearAll.disabled = false;
+                }
+                if (btnExceptionsList) {
+                    btnExceptionsList.disabled = false;
                 }
             }
         }
@@ -1334,12 +1418,21 @@
 
             const btnReplace = document.getElementById('modalBtnReplace');
             const btnReplaceText = document.getElementById('modalBtnReplaceText');
+            const btnReplaceAndExcept = document.getElementById('modalBtnReplaceAndExcept');
+            const btnReplaceAndExceptText = document.getElementById('modalBtnReplaceAndExceptText');
 
             if (origVal) {
                 btnReplace.style.display = 'flex';
                 btnReplaceText.textContent = `Замінити токен початковим текстом ("${origVal}")`;
+                if (btnReplaceAndExcept) {
+                    btnReplaceAndExcept.style.display = 'flex';
+                    if (btnReplaceAndExceptText) {
+                        btnReplaceAndExceptText.textContent = `Замінити токен початковим текстом з додаванням до списку виключень`;
+                    }
+                }
             } else {
                 btnReplace.style.display = 'none';
+                if (btnReplaceAndExcept) btnReplaceAndExcept.style.display = 'none';
             }
 
             document.getElementById('deleteModal').style.display = 'flex';
@@ -1434,19 +1527,31 @@
             closeAddTokenModal();
         }
 
-        function confirmDeleteToken(action) {
+        async function confirmDeleteToken(action) {
             if (!pendingDeleteState) return;
             const { tr, tokenVal, origVal } = pendingDeleteState;
 
             const pseudoBox = document.getElementById('pseudonymizedBox');
             const llmBox = document.getElementById('llmBox');
 
-            if (action === 'replace') {
+            if (action === 'replace' || action === 'replace_and_except') {
                 if (pseudoBox && pseudoBox.value && !pseudoBox.value.includes('Псевдонімізований текст з унікальними')) {
                     pseudoBox.value = pseudoBox.value.split(tokenVal).join(origVal);
                 }
                 if (llmBox && llmBox.value) {
                     llmBox.value = llmBox.value.split(tokenVal).join(origVal);
+                }
+
+                if (action === 'replace_and_except' && origVal) {
+                    try {
+                        await fetch('/api/v1/exceptions', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text: origVal })
+                        });
+                    } catch (err) {
+                        console.error('Error adding exception:', err);
+                    }
                 }
             } else if (action === 'remove') {
                 if (pseudoBox && pseudoBox.value && !pseudoBox.value.includes('Псевдонімізований текст з унікальними')) {
@@ -1672,6 +1777,170 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        }
+
+        function escapeJsString(str) {
+            return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        async function openExceptionsModal() {
+            const btn = document.getElementById('btnExceptionsList');
+            if (btn && btn.disabled) return;
+            document.getElementById('exceptionErrorMsg').style.display = 'none';
+            document.getElementById('newExceptionInput').value = '';
+            document.getElementById('exceptionsModal').style.display = 'flex';
+            await loadExceptionsList();
+            setTimeout(() => {
+                const input = document.getElementById('newExceptionInput');
+                if (input) input.focus();
+            }, 100);
+        }
+
+        function closeExceptionsModal() {
+            document.getElementById('exceptionsModal').style.display = 'none';
+        }
+
+        async function loadExceptionsList() {
+            const tbody = document.getElementById('exceptionsTableBody');
+            if (!tbody) return;
+
+            try {
+                const response = await fetch('/api/v1/exceptions');
+                if (!response.ok) {
+                    throw new Error('Не вдалося завантажити список виключень');
+                }
+                const data = await response.json();
+                const items = data.exceptions || [];
+
+                tbody.innerHTML = '';
+                if (items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="2" style="color: var(--text-muted); font-style: italic; text-align: center;">Список виключень порожній</td></tr>';
+                    return;
+                }
+
+                items.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.id = `exc-row-${item.id}`;
+                    tr.innerHTML = `
+                        <td>
+                            <span id="exc-text-${item.id}" style="color: var(--text-main); font-weight: 500;">${escapeHtml(item.text)}</span>
+                        </td>
+                        <td style="text-align: center;">
+                            <button class="btn-icon" onclick="startEditException(${item.id}, '${escapeJsString(item.text)}')" title="Відредагувати" style="color: var(--accent-blue); margin-right: 0.3rem;">✏️</button>
+                            <button class="btn-icon" onclick="deleteExceptionFromModal(${item.id})" title="Видалити" style="color: var(--accent-rose);">🗑️</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="2" style="color: var(--accent-rose); text-align: center;">Помилка: ${escapeHtml(err.message)}</td></tr>`;
+            }
+        }
+
+        async function addExceptionFromModal() {
+            const errorDiv = document.getElementById('exceptionErrorMsg');
+            errorDiv.style.display = 'none';
+
+            const input = document.getElementById('newExceptionInput');
+            const textVal = input ? input.value.trim() : '';
+
+            if (!textVal) {
+                errorDiv.textContent = 'Будь ласка, введіть текстовий фрагмент.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/v1/exceptions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: textVal })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Помилка при додаванні виключення');
+                }
+
+                input.value = '';
+                await loadExceptionsList();
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function startEditException(id, currentText) {
+            document.getElementById('exceptionErrorMsg').style.display = 'none';
+            const row = document.getElementById(`exc-row-${id}`);
+            if (!row) return;
+
+            row.innerHTML = `
+                <td>
+                    <input type="text" id="edit-exc-input-${id}" class="value-input" value="${escapeHtml(currentText)}" onkeydown="if(event.key==='Enter'){ saveEditException(${id}); } else if(event.key==='Escape'){ loadExceptionsList(); }">
+                </td>
+                <td style="text-align: center;">
+                    <button class="btn-icon" onclick="saveEditException(${id})" title="Зберегти" style="color: var(--accent-emerald); font-weight: bold; margin-right: 0.3rem;">💾</button>
+                    <button class="btn-icon" onclick="loadExceptionsList()" title="Скасувати" style="color: var(--text-muted);">❌</button>
+                </td>
+            `;
+            setTimeout(() => {
+                const inp = document.getElementById(`edit-exc-input-${id}`);
+                if (inp) inp.focus();
+            }, 50);
+        }
+
+        async function saveEditException(id) {
+            const errorDiv = document.getElementById('exceptionErrorMsg');
+            errorDiv.style.display = 'none';
+
+            const inp = document.getElementById(`edit-exc-input-${id}`);
+            const newText = inp ? inp.value.trim() : '';
+
+            if (!newText) {
+                errorDiv.textContent = 'Будь ласка, введіть текстовий фрагмент.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/v1/exceptions/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: newText })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Помилка при оновленні виключення');
+                }
+
+                await loadExceptionsList();
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        async function deleteExceptionFromModal(id) {
+            const errorDiv = document.getElementById('exceptionErrorMsg');
+            errorDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(`/api/v1/exceptions/${id}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Помилка при видаленні виключення');
+                }
+
+                await loadExceptionsList();
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.style.display = 'block';
+            }
         }
     </script>
 </body>
