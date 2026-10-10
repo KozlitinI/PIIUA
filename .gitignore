@@ -11,3 +11,7 @@ build_installer.py
 package_dist.py
 piiua.spec
 PIIUA_Setup.iss
+
+# Databases
+app/exceptions.db
+*.db
