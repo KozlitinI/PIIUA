@@ -61,6 +61,50 @@
             margin-bottom: 2.5rem;
         }
 
+        .brand-header {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .brand-logo {
+            width: 58px;
+            height: 58px;
+            object-fit: contain;
+            border-radius: 14px;
+            filter: drop-shadow(0 6px 16px rgba(99, 102, 241, 0.35));
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease;
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        .brand-logo:hover {
+            transform: scale(1.08) rotate(2deg);
+            filter: drop-shadow(0 10px 22px rgba(168, 85, 247, 0.5));
+        }
+
+        .brand-header h1 {
+            margin-bottom: 0;
+            text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .brand-header {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            .brand-header h1 {
+                text-align: center;
+                font-size: 1.85rem;
+            }
+            .brand-logo {
+                width: 52px;
+                height: 52px;
+            }
+        }
+
         .logo-badge {
             display: inline-flex;
             align-items: center;
@@ -624,7 +668,10 @@
 <body>
     <div class="container">
         <header>
-            <h1>PII Псевдонімізація та Відновлення Токенів</h1>
+            <div class="brand-header">
+                <img src="/static/piiua-logo.png" onerror="this.onerror=null; this.src='piiua-logo.png'" alt="Логотип PIIUA" class="brand-logo">
+                <h1>PIIUA — Псевдонімізація та Відновлення Токенів</h1>
+            </div>
             <p>Безпечний аналіз спору: виявлення персональних даних українських юридичних текстів, псевдонімізація для
                 передачі в LLM та локальне відновлення.</p>
         </header>
