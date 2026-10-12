@@ -67,6 +67,14 @@ async def serve_index():
     return {"message": "PIIUA API is running. Access /docs for API documentation."}
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def serve_favicon():
+    favicon_file = STATIC_DIR / "favicon.ico"
+    if favicon_file.exists():
+        return FileResponse(str(favicon_file), media_type="image/x-icon")
+    raise HTTPException(status_code=404, detail="Favicon not found")
+
+
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "service": "PIIUA", "version": "1.0.0"}
