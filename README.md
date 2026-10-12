@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="piiua-logo.png"
+       alt="PIIUA Logo"
+       width="220">
+</p>
+
 # PIIUA — Веб-сервіс псевдонімізації персональних даних для української мови 🇺🇦
 
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https.www.python.org)
