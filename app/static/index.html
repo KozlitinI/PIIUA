@@ -376,11 +376,20 @@
 
         .pii-tag {
             display: inline-block;
-            padding: 0.15rem 0.4rem;
+            padding: 0.15rem 0.45rem;
             border-radius: 0.375rem;
             font-size: 0.85rem;
             font-weight: 600;
             margin: 0 0.1rem;
+            background: rgba(99, 102, 241, 0.25);
+            color: #c7d2fe;
+            border: 1px solid rgba(99, 102, 241, 0.45);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: all 0.15s ease;
+        }
+
+        .pii-tag:hover {
+            filter: brightness(1.15);
         }
 
         .tag-person {
@@ -395,6 +404,18 @@
             border: 1px solid rgba(251, 191, 36, 0.4);
         }
 
+        .tag-edrpou {
+            background: rgba(132, 204, 22, 0.25);
+            color: #bef264;
+            border: 1px solid rgba(132, 204, 22, 0.4);
+        }
+
+        .tag-mfo {
+            background: rgba(20, 184, 166, 0.25);
+            color: #5eead4;
+            border: 1px solid rgba(20, 184, 166, 0.4);
+        }
+
         .tag-passport {
             background: rgba(192, 132, 252, 0.25);
             color: #e9d5ff;
@@ -407,13 +428,15 @@
             border: 1px solid rgba(52, 211, 153, 0.4);
         }
 
-        .tag-phone {
+        .tag-phone,
+        .tag-phone_number {
             background: rgba(244, 63, 94, 0.25);
             color: #fda4af;
             border: 1px solid rgba(244, 63, 94, 0.4);
         }
 
-        .tag-case_num {
+        .tag-case_num,
+        .tag-case_number {
             background: rgba(129, 140, 248, 0.25);
             color: #c7d2fe;
             border: 1px solid rgba(129, 140, 248, 0.4);
@@ -425,7 +448,8 @@
             border: 1px solid rgba(251, 146, 60, 0.4);
         }
 
-        .tag-email {
+        .tag-email,
+        .tag-email_address {
             background: rgba(168, 85, 247, 0.25);
             color: #f0abfc;
             border: 1px solid rgba(168, 85, 247, 0.4);
@@ -437,11 +461,32 @@
             border: 1px solid rgba(14, 165, 233, 0.4);
         }
 
+        .tag-url {
+            background: rgba(59, 130, 246, 0.25);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+
         .tag-org,
         .tag-organization {
             background: rgba(236, 72, 153, 0.25);
             color: #f472b6;
             border: 1px solid rgba(236, 72, 153, 0.4);
+        }
+
+        .tag-datetime,
+        .tag-date_time {
+            background: rgba(163, 230, 53, 0.25);
+            color: #bef264;
+            border: 1px solid rgba(163, 230, 53, 0.4);
+        }
+
+        .tag-location,
+        .tag-loc,
+        .tag-gpe {
+            background: rgba(245, 158, 11, 0.25);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.4);
         }
 
         .token-mapping-table {
@@ -1401,6 +1446,18 @@
             });
         }
 
+        function getEntityTagClass(entityType) {
+            if (!entityType) return 'tag-default';
+            const clean = entityType.toLowerCase().replace(/^uk_/, '');
+            if (clean === 'case_num' || clean === 'case_number') return 'tag-case_number';
+            if (clean === 'email' || clean === 'email_address') return 'tag-email';
+            if (clean === 'organization' || clean === 'org') return 'tag-org';
+            if (clean === 'phone' || clean === 'phone_number') return 'tag-phone';
+            if (clean === 'date_time' || clean === 'datetime') return 'tag-datetime';
+            if (clean === 'location' || clean === 'loc' || clean === 'gpe') return 'tag-location';
+            return 'tag-' + clean;
+        }
+
         function renderHighlightedText(originalText, entities) {
             const box = document.getElementById('highlightedBox');
             if (!entities || entities.length === 0) {
@@ -1408,18 +1465,29 @@
                 return;
             }
 
-            // Sort entities backwards
-            const sorted = [...entities].sort((a, b) => b.start - a.start);
-            let html = originalText;
+            // Sort entities ascending by start index
+            const sorted = [...entities].sort((a, b) => a.start - b.start);
+            let resultHtml = '';
+            let lastIndex = 0;
 
             sorted.forEach(ent => {
-                const tagClass = 'tag-' + ent.entity_type.toLowerCase().replace('uk_', '');
-                const snippet = html.substring(ent.start, ent.end);
-                const replacement = `<span class="pii-tag ${tagClass}" title="${ent.entity_type} (${Math.round(ent.score * 100)}%)">${escapeHtml(snippet)}</span>`;
-                html = html.substring(0, ent.start) + replacement + html.substring(ent.end);
+                if (ent.start < lastIndex) {
+                    return; // Skip overlapping entities
+                }
+                if (ent.start > lastIndex) {
+                    resultHtml += escapeHtml(originalText.substring(lastIndex, ent.start));
+                }
+                const tagClass = getEntityTagClass(ent.entity_type);
+                const snippet = originalText.substring(ent.start, ent.end);
+                resultHtml += `<span class="pii-tag ${tagClass}" title="${escapeHtml(ent.entity_type)} (${Math.round(ent.score * 100)}%)">${escapeHtml(snippet)}</span>`;
+                lastIndex = ent.end;
             });
 
-            box.innerHTML = html;
+            if (lastIndex < originalText.length) {
+                resultHtml += escapeHtml(originalText.substring(lastIndex));
+            }
+
+            box.innerHTML = resultHtml;
         }
 
         function renderMappingTable(mapping) {
